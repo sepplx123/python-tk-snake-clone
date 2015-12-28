@@ -9,7 +9,7 @@ try:
     import Tkinter as tk
     import tkMessageBox as msgbox    
     import ScrolledText as tkst
-    
+    import tkFileDialog as fdialog
 except ImportError:
     import tkinter as tk
     import tkinter.messagebox as msgbox    
@@ -221,9 +221,6 @@ class Leveleditor():
         self.spielsteuerung = spielsteuerung
         self.canvas = canvas
         self.scrollbox = scrollbox
-
-
-        
         self.show_text('init class Leveleditor done')
 
     def reset_all(self):
@@ -232,89 +229,102 @@ class Leveleditor():
         #self.snake.reset()
 
     def create_level(self):
-        print('create_level')
+        self.reset_all()
+
+
+
+        
+        print('create a new level')
 
         
        
     def edit_level(self):
-         print('edit_level')
+         print('edit this level')
 
          
        
     
     def save_level(self):
         liste = []
-        for i in range(self.spielfeld.rows):
-            liste.append("")
+        level_name = fdialog.asksaveasfilename(defaultextension=".txt", title="save snake level")
+        
+        if level_name:
+            level_file = open(level_name, "w")
 
-        for x in range(self.spielfeld.columns):                     # column Schleife ==>> X-Koordinate
-            for y in range(self.spielfeld.rows):                    # row Schleife    ==>> Y-Koordinate
-                coords = x,y
-                #self.spielfeld.spielfeld_db[coords]
-                liste[y] += (self.spielfeld.spielfeld_db[coords])
+            for i in range(self.spielfeld.rows):
+                liste.append("")
 
-        fobj_out = open("snake_level.txt", "w")
-        print('------------')
-        for line in liste:
-            out_line = "{0:s}\n".format(line)
-            fobj_out.write(out_line)
-            print('|'+line+'|')
-            #print(out_line)
-        fobj_out.close()
-        print('------------')
-        print('level saved! filename: snake_level.txt')
+            for x in range(self.spielfeld.columns):                     # column Schleife ==>> X-Koordinate
+                for y in range(self.spielfeld.rows):                    # row Schleife    ==>> Y-Koordinate
+                    coords = x,y
+                    #self.spielfeld.spielfeld_db[coords]
+                    liste[y] += (self.spielfeld.spielfeld_db[coords])
+
+            print('------------')
+            for line in liste:
+                out_line = "{0:s}\n".format(line)
+                print('|'+line+'|')
+                #print(out_line)
+                level_file.write(out_line)
+            print('------------')
+        
+            level_file.close()
+            print('level saved to file: '+str(level_name))
+        else:
+            print('canceled save level!')
 
     def load_level(self):       
         self.reset_all()
+        snake_head = False       
+        level_name = fdialog.askopenfilename(defaultextension=".txt", title="load snake level")
 
-        snake_head = False
-        fobj_in = open("snake_level.txt", "r")
-        liste = fobj_in.read().splitlines()
-        fobj_in.close()
-        print('------------')
-        for i in range(len(liste)):
-            print('|'+str(liste[i])+'|')
-        print('------------')
-            
-
-        for y in range(len(liste)):                 # row schleife     ==>> Y-Koordinate
-            for x in range(len(liste[y])):          # column schleife  ==>> X-Koordinate
-                coords = x, y
-                item = liste[y]
-                self.spielfeld.spielfeld_db[coords] = str(item[x])
-                #print(coords, str(item[x]))
-                if item[x] == "S":
-                    if snake_head == False: # the first snake item is defined as the head. all others are body
-                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='green',tags=(str(x)+'_'+str(y),'snake'))   # snake head
-                        snake_head = True
-                        self.spielfeld.snake_headposition = coords
-                        self.snake.positions.append(coords)
+        if level_name:
+            level_file = open(level_name, "r")
+            liste = level_file.read().splitlines()
+            level_file.close()
+        
+            print('------------')
+            for y in range(len(liste)):                 # row schleife     ==>> Y-Koordinate
+                print('|'+str(liste[y])+'|')
+                for x in range(len(liste[y])):          # column schleife  ==>> X-Koordinate
+                    coords = x, y
+                    item = liste[y]
+                    self.spielfeld.spielfeld_db[coords] = str(item[x])
+                    #print(coords, str(item[x]))
+                    if item[x] == "S":
+                        if snake_head == False: # the first snake item is defined as the head. all others are body
+                            self.canvas.itemconfigure(str(x)+'_'+str(y), fill='green',tags=(str(x)+'_'+str(y),'snake'))   # snake head
+                            snake_head = True
+                            self.spielfeld.snake_headposition = coords
+                            self.snake.positions.append(coords)
+                        else:
+                            self.canvas.itemconfigure(str(x)+'_'+str(y), fill='#006400',tags=(str(x)+'_'+str(y),'snake')) # snake body
+                            self.spielfeld.snake_positions.append(coords)
+                            self.snake.positions.append(coords)
+                    elif item[x] == "W":
+                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='grey',tags=(str(x)+'_'+str(y),'wall'))
+                        self.spielfeld.wall_positions.append(coords)
+                    elif item[x] == "A":
+                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='red',tags=(str(x)+'_'+str(y),'apple'))
+                        self.spielfeld.apple_positions.append(coords)
+                    elif item[x] == "E":    # no exit allowed! will be calculated later! change back to empty field
+                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
+                        self.spielfeld.empty_fields.append(coords)
+                        print('Exit field',coords, 'changed back to empty field!')
                     else:
-                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='#006400',tags=(str(x)+'_'+str(y),'snake')) # snake body
-                        self.spielfeld.snake_positions.append(coords)
-                        self.snake.positions.append(coords)
-                elif item[x] == "W":
-                    self.canvas.itemconfigure(str(x)+'_'+str(y), fill='grey',tags=(str(x)+'_'+str(y),'wall'))
-                    self.spielfeld.wall_positions.append(coords)
-                elif item[x] == "A":
-                    self.canvas.itemconfigure(str(x)+'_'+str(y), fill='red',tags=(str(x)+'_'+str(y),'apple'))
-                    self.spielfeld.apple_positions.append(coords)
-                elif item[x] == "E":    # no exit allowed! will be calculated later! change back to empty field
-                    self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
-                    self.spielfeld.empty_fields.append(coords)
-                    print('Exit field',coords, 'changed back to empty field!')
-                else:
-                    self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
-                    self.spielfeld.empty_fields.append(coords)
+                        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
+                        self.spielfeld.empty_fields.append(coords)
+            print('------------')
+            #print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
+            #print('Class snake positions:',self.snake.positions)
+            #print('walls:',self.spielfeld.wall_positions)
+            #print('apples:',self.spielfeld.apple_positions)
+            #print('exit:', self.spielfeld.exit_position)
+            print('level loaded from file:'+str(level_name))
+        else:
+            print('canceled load level!')
 
-                
-        #print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
-        #print('Class snake positions:',self.snake.positions)
-        #print('walls:',self.spielfeld.wall_positions)
-        #print('apples:',self.spielfeld.apple_positions)
-        #print('exit:', self.spielfeld.exit_position)
-        print('level loaded from file: snake_level.txt')
-
+            
     def show_text(self, text):
         self.act_time = datetime.now().time()
         mytext = '{0:02d}:{1:02d}:{2:02d}:{3:03d}'.format(self.act_time.hour, self.act_time.minute, self.act_time.second,int(self.act_time.microsecond/1000)) + ' ' + text +'\n'
@@ -379,27 +389,25 @@ class Spielsteuerung():
         
           
     def game_loop(self):
-        
-        # command queue for snake directions
-        while self.commands:                                
-            #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
-            
-            actx, acty = self.snakedirection                # take actual snake direction            
-            newx, newy = self.commands.pop(0)               # get the value and delete the item from the list
-            if (newx, newy) == self.snakedirection:         # if new direction is the same, pick next item from queue
-                print('_____________________ same direction removed from queue')
-                continue
-            elif (actx+newx, acty+newy) == (0, 0):          # lock 180° turns
-                print('_____________________ 180 degree turn blocked')
-                continue
-            else:
-                self.snakedirection = (newx, newy)
-                break
 
-        
-        
         #Step 1: check if game not over           
-        if not self.game_end:    
+        if not self.game_end:       
+
+            # command queue for snake directions
+            while self.commands:                                
+                #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
+                actx, acty = self.snakedirection                # take actual snake direction            
+                newx, newy = self.commands.pop(0)               # get the value and delete the item from the list
+                if (newx, newy) == self.snakedirection:         # if new direction is the same, pick next item from queue
+                    print('_____________________ same direction removed from queue')
+                    continue
+                elif (actx+newx, acty+newy) == (0, 0):          # lock 180° turns
+                    print('_____________________ 180 degree turn blocked')
+                    continue
+                else:
+                    self.snakedirection = (newx, newy)
+                    break
+
             if self.snakedirection != (0, 0) and not self.game_start:
                 self.game_start = True
                 #print('==> game starts...')
@@ -446,7 +454,7 @@ class Spielsteuerung():
             
     def collision_detection(self):
         if self.new_snake_headposition in self.spielfeld.snake_positions:
-            print('snake body:',self.spielfeld.snake_positions)
+            #print('snake body:',self.spielfeld.snake_positions)
             #print('_______self collision!!!!!','head:',head_position,'item_index:',self.spielfeld.snake_positions.index(head_position))
             #print('_______snake_body:',self.spielfeld.snake_positions)
             self.show_text('==> self collision! head'+str(self.new_snake_headposition)+' collides with body item_index['+str(self.spielfeld.snake_positions.index(self.new_snake_headposition))+']')
@@ -469,10 +477,11 @@ class Spielsteuerung():
 
     def new_game(self):
         self.reset()                            # create a new game and DB
-        self.spielfeld.create_world()
+        
+        self.spielfeld.load_next_level()
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
-        print(datetime.now().time(),'create new_world:')
+
     
     def game_over(self):
         self.game_running = False
@@ -480,7 +489,7 @@ class Spielsteuerung():
         self.game_end = True
         self.commands = []
         self.show_text('==> Game Over!')
-        self.spielfeld.show_game_over_reason(self.new_snake_headposition)
+        self.spielfeld.reason_game_over(self.new_snake_headposition)
         #self.spielfeld.show_status()
 
     def game_win(self):
@@ -701,7 +710,7 @@ class Spielfeld():
             self.canvas.itemconfigure(str(x)+'_'+str(y), fill='red',tags=(str(x)+'_'+str(y),'apple')) #change the color according to the defined 
         #print('apple_positions:',self.apple_positions)
 
-        self.show_text('init class Spielfeld done')
+        self.show_text('world created')
 
     def update_screen(self,snake_headposition, new_empty_field, eat_apple):
         self.snake_headposition = snake_headposition
@@ -728,41 +737,21 @@ class Spielfeld():
         if len(self.apple_positions) == 0 and len(self.exit_position) == 0:  #Wenn keine Apples mehr da sind, erstelle den Ausgang nur 1mal
             self.create_exit()
 
+
     def create_exit(self):
         self.empty_fields = []
         for item in self.spielfeld_db:                               # gehe jedes Item der Spielfeld-DB durch
             if self.spielfeld_db[item] == " ":                       # pruefe auf leere Felder
                 self.empty_fields.append(item)                       # Erstelle eine Liste mit Koordinatenpaare der leeren Felder
-        """       
-        temp = []        
-        print('self.empty_fields:',self.empty_fields)
-        for element in self.spielfeld_db:
-            if self.spielfeld_db[element] == 'S':
-                temp.append(element)
-        print('____Snake:',len(temp),temp )
-        print('snake_positions:',len(self.snake_positions),self.snake_positions)
-        """
+        
         item = randint(0, len(self.empty_fields)-1)                 # Picke random ein element aus den leeren Spielfeldern heraus 
         self.exit_position.append(self.empty_fields[item])          # füge dieses Element zur Liste der Exit-Positionen hinzu
         del self.empty_fields[item]                                 # Lösche das Element aus der Liste der freien Felder
         self.spielfeld_db[self.exit_position[0]] = "E"              # Eintrag in die DB als Exit
         x,y = self.exit_position[0]      
         self.canvas.itemconfigure(str(x)+'_'+str(y), fill='blue',tags=(str(x)+'_'+str(y),'exit')) #change the color according to the defined
-        """
-        print('_______',datetime.now().time(),' create exit at: ', self.exit_position[0])
-        
-        if self.exit_position[0] in temp:
-            print(temp.index(self.exit_position[0]))
-        else:
-            print('exit not in ____Snake:')
-        if self.exit_position[0] in self.snake_positions:
-            print(self.snake_positions.index(self.exit_position[0]))
-        else:
-            print('exit not in snake_positions:')            
-            
-        #print('Exit:',self.exit_position[0])
-        """
-        
+
+
     def show_status(self):
         temp = []  
         for element in self.spielfeld_db:
@@ -793,12 +782,25 @@ class Spielfeld():
         print('____Walls:',len(self.wall_positions) , self.wall_positions)                      
 
 
-    def show_game_over_reason(self,item_position):
-        print('reason for game over ==> field',item_position,'item_type:',self.spielfeld_db[item_position])
+    def reason_game_over(self,position):
+        reason = ""
+        if self.spielfeld_db[position] == 'S':
+            reason = "snake body"
+        elif self.spielfeld_db[position] == 'W':
+            reason = "wall"
+        elif self.spielfeld_db[position] == 'A':
+            reason = "apple"
+        elif self.spielfeld_db[position] == 'E':
+            reason = "exit"
+        elif self.spielfeld_db[position] == ' ':
+            reason = "empty field"
+        print('reason for game over ==> field:'+str(position)+' | item_type: '+reason)
+
 
     def load_next_level(self):
-        pass
-        
+        self.create_world()
+
+
     def reset(self):
         self.spielfeld_db = {}         
         self.empty_fields = []
@@ -810,8 +812,6 @@ class Spielfeld():
         self.new_empty_field = []
 
         self.create_playground()
-        
-        #self.create_world()
         print('reset spielfeld done')
     
     def show_text(self, text):
