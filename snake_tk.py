@@ -3,6 +3,7 @@
 from __future__ import absolute_import, division, print_function
 from random import randint
 from datetime import datetime
+from copy import deepcopy
 
 # Fix for Python 2.x/3.x
 try:
@@ -59,6 +60,8 @@ class GUI():
         # Canvas
         self.canvas = tk.Canvas(self.fr2, width=500, height=500,
                                 highlightthickness=1, background='white')
+        self.canvas["background"]='red'
+        
         self.canvas.grid(row=2,column=2,sticky='nesw')
 
         # BUTTONS
@@ -89,8 +92,9 @@ class GUI():
         self.snake = Snake(self.spielfeld_rows,self.spielfeld_columns,self.scroll_text)
         self.spielfeld = Spielfeld(self.canvas,self.snake,self.spielfeld_rows,self.spielfeld_columns,
                                    self.spielfeld_itemwidth,self.spielfeld_itemheight,scrollbox=self.scroll_text)
-        self.spielsteuerung = Spielsteuerung(self.snake,self.spielfeld,canvas=self.canvas,scrollbox=self.scroll_text)
-        self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,spielsteuerung=self.spielsteuerung,canvas=self.canvas,scrollbox=self.scroll_text)
+        self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,canvas=self.canvas,scrollbox=self.scroll_text)
+        self.spielsteuerung = Spielsteuerung(self.snake,self.spielfeld,self.leveleditor,canvas=self.canvas,scrollbox=self.scroll_text)
+        
 
         self.create_keybindings()       # Funktion Keybindsings aufrufen
 
@@ -102,7 +106,9 @@ class GUI():
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Game", menu=self.filemenu)
         self.filemenu.add_command(label="new game",
-                                  command=self.spielsteuerung.new_game)       
+                                  command=self.spielsteuerung.new_game)
+        self.filemenu.add_command(label="restart level",
+                                  command=self.spielsteuerung.restart_level)       
         self.filemenu.add_command(label="reset",
                                   command=self.spielsteuerung.reset)
         self.filemenu.add_separator()
@@ -112,10 +118,10 @@ class GUI():
         # "Leveleditor"-Menue
         self.l_editor = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Level Editor", menu=self.l_editor) 
-        self.l_editor.add_command(label="create level", command=self.leveleditor.create_level)
-        self.l_editor.add_command(label="edit level", command=self.leveleditor.edit_level)
-        self.l_editor.add_command(label="save level", command=self.leveleditor.save_level)
-        self.l_editor.add_command(label="load level", command=self.leveleditor.load_level)       
+        self.l_editor.add_command(label="create level", command=lambda: self.start_leveleditor("create_level"))
+        self.l_editor.add_command(label="edit level", command=lambda: self.start_leveleditor("edit_level"))
+        self.l_editor.add_command(label="save level", command=lambda: self.start_leveleditor("save_level"))
+        self.l_editor.add_command(label="load level", command=lambda: self.start_leveleditor("load_level"))      
 
         # "Hilfe"-Menue
         self.infomenu = tk.Menu(self.menubar, tearoff=0)
@@ -171,6 +177,8 @@ class GUI():
         self.master.bind("<Down>", self.keyfunctions)
         self.master.bind("<p>", self.keyfunctions)
         self.master.bind("<Escape>", self.closeWindow)
+        self.canvas.bind("<Button-1>", self.mousefunctions)
+        self.canvas.bind("<Button-3>", self.mousefunctions)
         self.show_text('keybindings created')
 
         # Funktionsauswertung der Tastendrücke
@@ -179,7 +187,34 @@ class GUI():
         #print(self.act_time, "Tastendruck =", self.event.keysym)
         self.spielsteuerung.keyevent(self.event.keysym)
 
-               
+    def mousefunctions(self,event):
+        next_item_mode = 0
+        self.event = event
+        self.canvas.focus_set()
+
+        if self.event.num == 1:
+            next_item_mode = +1
+        if self.event.num == 3:
+            next_item_mode = -1
+        if self.leveleditor.edit_mode:
+            coords = (self.event.x, self.event.y)
+            self.spielfeld.edit_mode(coords,next_item_mode)            
+
+    def start_leveleditor(self,command):
+        print('start_leveleditor')
+        print(len(self.spielfeld.spielfeld_db),self.spielfeld.spielfeld_db)
+        print(len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
+        #self.spielsteuerung.reset()
+
+        if command == 'create_level':
+            self.leveleditor.create_level()
+        if command == 'edit_level':
+            self.leveleditor.edit_level()
+        if command == 'save_level':
+            self.leveleditor.save_level()
+        if command == 'load_level':
+            self.leveleditor.load_level()
+
     def closeWindow(self,*event):
         self.event = event
         if self.event:
@@ -215,36 +250,41 @@ class GUI():
 class Leveleditor():
     """ Create and edite levels and save/load it to a file
     """
-    def __init__(self,spielfeld,snake,spielsteuerung,canvas,scrollbox):
+    def __init__(self,spielfeld,snake,canvas,scrollbox):
         self.spielfeld = spielfeld
         self.snake = snake
-        self.spielsteuerung = spielsteuerung
         self.canvas = canvas
         self.scrollbox = scrollbox
+
+        self.edit_mode = False
+        
         self.show_text('init class Leveleditor done')
 
-    def reset_all(self):
-        self.spielsteuerung.reset()
-        #self.spielfeld.reset()
-        #self.snake.reset()
 
     def create_level(self):
-        self.reset_all()
-
-
+        self.edit_mode = True
+        self.spielfeld.create_playground()
+        print('Leveleditor: Edit-mode activated. Now you can create a new level')
+        
 
         
-        print('create a new level')
+        
 
         
        
     def edit_level(self):
-         print('edit this level')
+        self.edit_mode = True
+
+        
+        print('Leveleditor: Edit-mode activated. Now you can edit this level')
 
          
        
     
     def save_level(self):
+        print('start saving level.......')
+        print(len(self.spielfeld.spielfeld_db),self.spielfeld.spielfeld_db)
+        
         liste = []
         level_name = fdialog.asksaveasfilename(defaultextension=".txt", title="save snake level")
         
@@ -269,16 +309,30 @@ class Leveleditor():
             print('------------')
         
             level_file.close()
+            self.spielfeld.act_level_data(command='save') # save level information in a new DB [necessary for restart!]
+            self.edit_mode = False
             print('level saved to file: '+str(level_name))
         else:
             print('canceled save level!')
 
     def load_level(self):       
-        self.reset_all()
+        
+        print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
+        print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+        print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
+        print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
+        print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
+        print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
+
+        
         snake_head = False       
         level_name = fdialog.askopenfilename(defaultextension=".txt", title="load snake level")
 
         if level_name:
+            self.spielfeld.reset()
+            self.snake.reset()
+
+            
             level_file = open(level_name, "r")
             liste = level_file.read().splitlines()
             level_file.close()
@@ -291,6 +345,7 @@ class Leveleditor():
                     item = liste[y]
                     self.spielfeld.spielfeld_db[coords] = str(item[x])
                     #print(coords, str(item[x]))
+                    
                     if item[x] == "S":
                         if snake_head == False: # the first snake item is defined as the head. all others are body
                             self.canvas.itemconfigure(str(x)+'_'+str(y), fill='green',tags=(str(x)+'_'+str(y),'snake'))   # snake head
@@ -311,18 +366,24 @@ class Leveleditor():
                         self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
                         self.spielfeld.empty_fields.append(coords)
                         print('Exit field',coords, 'changed back to empty field!')
-                    else:
+                    elif item[x] == " ":
                         self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty'))
                         self.spielfeld.empty_fields.append(coords)
+                        
             print('------------')
-            #print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
-            #print('Class snake positions:',self.snake.positions)
-            #print('walls:',self.spielfeld.wall_positions)
-            #print('apples:',self.spielfeld.apple_positions)
-            #print('exit:', self.spielfeld.exit_position)
+            print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
+            print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+            print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
+            print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
+            print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
+            print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
             print('level loaded from file:'+str(level_name))
+
+            self.spielfeld.act_level_data(command='save') # save level information in a new DB [necessary for restart!]
+            self.edit_mode = False
         else:
             print('canceled load level!')
+        
 
             
     def show_text(self, text):
@@ -337,9 +398,10 @@ class Spielsteuerung():
     """ Spielablauf und Collisionsauswertung.
     UI ==> spielsteuerung ==> spielfeld ==> Snake
     """
-    def __init__(self,snake,spielfeld,canvas,scrollbox):
+    def __init__(self,snake,spielfeld,leveleditor,canvas,scrollbox):
         self.snake = snake
         self.spielfeld = spielfeld
+        self.leveleditor =leveleditor
         self.canvas = canvas
         self.scrollbox = scrollbox
         
@@ -364,6 +426,7 @@ class Spielsteuerung():
     def keyevent(self,keysym):      
         self.keysym = keysym
         #print('key detected:', self.keysym)
+        
         value = (0, 0)
         
         if self.keysym == 'p' and self.game_running == True:    # pause the game
@@ -385,14 +448,13 @@ class Spielsteuerung():
         
         if value != (0, 0):
             self.commands.append(value) # add commant to the queue
-        
+        #print(self.commands)
         
           
     def game_loop(self):
-
         #Step 1: check if game not over           
-        if not self.game_end:       
-
+        if not self.game_end:
+            
             # command queue for snake directions
             while self.commands:                                
                 #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
@@ -420,7 +482,9 @@ class Spielsteuerung():
                 self.game_paused = False
                 self.show_text('==> game continues...')
                 #print('==> game continues')
-
+            if self.game_start:                         # reset Leveleditor Edit-mode
+                self.leveleditor.edit_mode = False
+            
         #Step 2: check if game running or paused
         if self.game_running:
             self.new_snake_headposition = self.snake.move(self.snakedirection)    #get the new headposition       
@@ -476,13 +540,17 @@ class Spielsteuerung():
             return self.no_collision
 
     def new_game(self):
-        self.reset()                            # create a new game and DB
-        
-        self.spielfeld.load_next_level()
+        self.reset()                            
+        self.spielfeld.load_next_level()        # create a new game and DB
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
 
-    
+    def restart_level(self):
+        self.reset()
+        self.spielfeld.restart()                # load game data back from DB and restart from the beginning
+        self.new_snake_headposition = self.snake.headposition
+        self.game_status = self.no_collision
+        
     def game_over(self):
         self.game_running = False
         self.game_start = False
@@ -508,9 +576,11 @@ class Spielsteuerung():
         self.game_start = False
         self.game_running = False
         self.game_end = False
+        self.commands = []
         
         self.snake.reset()
         self.spielfeld.reset()
+        self.spielfeld.create_playground()
         self.show_text('reset spielsteuerung done')
         print("reset spielsteuerung")
 
@@ -546,6 +616,7 @@ class Snake():
         
 
     def create(self):
+        self.positions = []
         for i in range(1,self.length+1):
             coords = (self.start_x, self.start_y-(self.length-i))
             self.positions.append(coords)
@@ -648,17 +719,21 @@ class Spielfeld():
         self.snake_positions = []
         self.snake_headposition = []
         self.new_empty_field = []
+        self.act_spielfeld_db = {}
+
 
         self.create_playground()
         self.show_text('init class Spielfeld done')
 
     def create_playground(self):
         # create an empty playground                                X,Y-Koordinanten-Paare erzeugen und in dem dict fuers Spielfeld als leere Felder anlegen 
+        self.spielfeld_db = {}
+        self.empty_fields = []
         for x in range(self.columns):                               # column Schleife ==>> X-Koordinate
             for y in range(self.rows):                              # row Schleife    ==>> Y-Koordinate
                 coords = x,y
-                self.spielfeld_db[coords] = " " 
-                item = self.canvas.create_rectangle(x*self.itemwidth,y*self.itemheight,self.itemwidth*(x+1),self.itemheight*(y+1), fill="black", outline='white' ,tags=(str(x)+'_'+str(y),'empty'))       
+                self.spielfeld_db[coords] = " "
+                item = self.canvas.create_rectangle(x*self.itemwidth,y*self.itemheight,self.itemwidth*(x+1),self.itemheight*(y+1), fill="black", outline='white' ,tags=(str(x)+'_'+str(y),'empty'))
         #print(self.spielfeld_db)
 
         for item in self.spielfeld_db:                               # gehe jedes Item der Spielfeld-DB durch
@@ -737,6 +812,87 @@ class Spielfeld():
         if len(self.apple_positions) == 0 and len(self.exit_position) == 0:  #Wenn keine Apples mehr da sind, erstelle den Ausgang nur 1mal
             self.create_exit()
 
+    def update_spielfeld_dict(self,item):
+        if item in self.snake_positions:
+            self.spielfeld_db[item] = "S"
+        if item in self.wall_positions:
+            self.spielfeld_db[item] = "W"
+        if item in self.apple_positions:
+            self.spielfeld_db[item] = "A"
+        if item in self.exit_position:
+            self.spielfeld_db[item] = "E"
+        if item in self.empty_fields:
+            self.spielfeld_db[item] = " "
+        print('==>>> item:', item, 'changed to item_type:',self.spielfeld_db[item])
+            
+
+    def edit_mode(self,coords,next_item_mode):
+        print('snake head:',self.snake_headposition ,'snake body:',self.snake_positions)
+        print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+        print('walls:',len(self.wall_positions),self.wall_positions)
+        print('apples:',len(self.apple_positions),self.apple_positions)
+        print('exit:', len(self.exit_position),self.exit_position)
+        print('empty fields:',len(self.empty_fields),self.empty_fields)
+        
+        self.item_rotation = {"S":[self.snake_positions,"self.snake_positions",3,"#006400","snake"],
+                              "W":[self.wall_positions,"self.wall_positions",1,"grey","wall"],
+                              "A":[self.apple_positions,"self.apple_positions",2,"red","apple"],
+                              " ":[self.empty_fields,"self.empty_fields",0,"black","emtpy"],
+                              "E":[self.exit_position,"self.exit_position",-1,"blue","exit"]
+                              }
+        
+        x = coords[0]//self.itemwidth
+        y = coords[1]//self.itemheight
+        item = (x, y)
+        
+            
+        temp = self.item_rotation[self.spielfeld_db[item]]  # selects the item data list
+        db = temp[0]
+        db_name = temp[1]
+        db_index =temp[2]
+        color = temp[3]
+        tagname = temp[4]        
+
+        try:
+            index = db.index(item)
+            print('| field:',item, '| item_type:', self.spielfeld_db[item],'| found in:',db_name,'| item_index:', index, '| color=', color,'|')
+            del db[db.index(item)]                          # delete item from specific DB
+            print('| field:',item, '| removed from:', db_name,'| item_index:', index,'|')
+
+        except ValueError:
+            print('| field:',item, '| item_type:', self.spielfeld_db[item])
+            print('==>>> item has no index! Could not be removed from db')
+
+        next_item = db_index + next_item_mode
+        if next_item > 3:
+            next_item = 0
+        elif next_item < 0:
+            next_item = 3
+            
+        for element in self.item_rotation.values():
+            if next_item == element[2]:
+                db = element[0]
+                db_name = element[1]
+                db_index =temp[2]
+                color = element[3]
+                tagname = element[4]
+        db.append(item)                                     # add item to the new DB
+        index = db.index(item)
+        print('| field:',item, '| saved in:', db_name,'| item_index:', index,'|')
+        
+        self.update_spielfeld_dict(item)                    # also add item to dict
+        self.canvas.itemconfigure(str(x)+'_'+str(y), fill=color, tags=(str(x)+'_'+str(y),tagname))
+
+        print('check if operation was succesful...')
+        temp = self.item_rotation[self.spielfeld_db[item]]  # selects the item data list
+        db = temp[0]
+        index = db.index(item)
+        db_name = temp[1]
+        db_index =temp[2]
+        color = temp[3]
+        tagname = temp[4]
+        print('| field:',item,'| item_type:',self.spielfeld_db[item],'| found in:',db_name,'| item_index:',index,'| color=',color,'|')
+        print('self.spielfeld_db:',len(self.spielfeld_db),self.spielfeld_db)
 
     def create_exit(self):
         self.empty_fields = []
@@ -795,23 +951,76 @@ class Spielfeld():
         elif self.spielfeld_db[position] == ' ':
             reason = "empty field"
         print('reason for game over ==> field:'+str(position)+' | item_type: '+reason)
-
-
+         
+    def act_level_data(self,command):
+        if command == "save":
+            self.act_spielfeld_db = self.spielfeld_db.copy()
+        if command == "load":
+            return self.act_spielfeld_db
+         
     def load_next_level(self):
+        self.create_playground()
         self.create_world()
+        self.act_level_data(command='save') # save level information in a new DB
 
+    def fill_itemtype_db(self,database):
+        for item in database:
+            x,y = item
+            if database[item] == "S":  
+                    self.snake.positions.append(item)   # snake body
+                    self.canvas.itemconfigure(str(x)+'_'+str(y), fill='#006400',tags=(str(x)+'_'+str(y),'snake')) #change the color according to the defined
+            elif database[item] == "W":
+                self.wall_positions.append(item)
+                self.canvas.itemconfigure(str(x)+'_'+str(y), fill='grey',tags=(str(x)+'_'+str(y),'wall')) #change the color according to the defined
+            elif database[item] == "A":
+                self.apple_positions.append(item)
+                self.canvas.itemconfigure(str(x)+'_'+str(y), fill='red',tags=(str(x)+'_'+str(y),'apple')) #change the color according to the defined
+            elif database[item] == "E":    # no exit allowed! Exit will be calculated later! change back to empty field
+                self.empty_fields.append(item)
+                self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty')) #change the color according to the defined
+                print('Exit field',item, 'changed back to empty field!')
+            elif database[item] == " ":
+                self.empty_fields.append(item)
+                self.canvas.itemconfigure(str(x)+'_'+str(y), fill='black',tags=(str(x)+'_'+str(y),'empty')) #change the color according to the defined
+
+        #snake head is the first snake item!  all others are body. So sort the list first
+        self.snake.positions.sort()
+        self.snake_positions = self.snake.positions[:]
+        self.snake_headposition = self.snake_positions.pop(0)
+        x, y = self.snake_headposition
+        self.canvas.itemconfigure(str(x)+'_'+str(y), fill='green',tags=(str(x)+'_'+str(y),'snake')) #change the color according to the defined
+
+        #print('snake head:',self.snake_headposition ,'snake body:',self.snake_positions)
+        #print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+        #print('walls:',len(self.wall_positions),self.wall_positions)
+        #print('apples:',len(self.apple_positions),self.apple_positions)
+        #print('exit:', len(self.exit_position),self.exit_position)
+        #print('empty fields:',len(self.empty_fields),self.empty_fields)
+
+
+        
+    def restart(self):
+        self.reset()
+        
+        #print('load items from db:.....',len(self.act_spielfeld_db),self.act_spielfeld_db)
+        self.spielfeld_db = self.act_level_data(command='load').copy()  # load the level information back to the dict
+        #print('values loaded:.....',len(self.spielfeld_db),self.spielfeld_db)
+        if self.spielfeld_db:
+            self.fill_itemtype_db(database=self.spielfeld_db)                        # extract values to specific item_type lists
+            print('spielfeld reload done')
+        else:
+            print('no data alavailable. You need to start a new game!')
 
     def reset(self):
+        self.exit_position = []
+        self.new_empty_field = []
+        
         self.spielfeld_db = {}         
         self.empty_fields = []
         self.apple_positions = []
-        self.exit_position = []
         self.wall_positions = []
         self.snake_positions = []
         self.snake_headposition = []
-        self.new_empty_field = []
-
-        self.create_playground()
         print('reset spielfeld done')
     
     def show_text(self, text):
