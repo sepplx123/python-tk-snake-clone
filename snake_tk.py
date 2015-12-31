@@ -21,14 +21,11 @@ class GUI():
     def __init__(self, master):
         self.master = master
 
-
         self.spielfeld_rows = 10        
         self.spielfeld_columns = 10
         self.spielfeld_itemwidth = 50
         self.spielfeld_itemheight = 50
 
-
-        
         self.cycle_time = 1                             # time in ms to wait for start next cycle
         self.time_last_cycle = datetime.now().time()
         self.cycle_counter = 0
@@ -53,21 +50,24 @@ class GUI():
         self.fr1 = tk.Frame(self.master, width=0, height=20, background='grey')
         self.fr2 = tk.Frame(self.master,width=200, height=200, background='yellow')
         self.fr3 = tk.Frame(self.master, width=0, height=20, background='grey')
-        self.fr1.pack(expand=1,fill='both')
+        self.fr1.pack(expand=1,fill='y',anchor='center')
         self.fr2.pack(fill='none',expand=0, side='top',anchor='center')
-        self.fr3.pack(expand=1,fill='both')        
+        self.fr3.pack(expand=1,fill='both',anchor='center')        
 
+        self.fr_scoreboard = tk.Frame(self.fr1,width=0, height=0, background='black')
+        self.fr_scoreboard.grid(row=0,column=1,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="nesw")
+
+        
         # Canvas
         self.canvas = tk.Canvas(self.fr2, width=500, height=500,
                                 highlightthickness=1, background='white')
         self.canvas["background"]='red'
-        
         self.canvas.grid(row=2,column=2,sticky='nesw')
 
         # BUTTONS
-        bQuit = tk.Button(self.fr3, text="Quit", width=8, height=1, command=self.closeWindow)        # Button Quit/Exit
-        bCreateWorld = tk.Button(self.fr3, text="load new Level",width=0, height=1, command=None)    # Button Create World
-        bCreateSnake = tk.Button(self.fr3, text="restart",width=0, height=1, command=None)           # Button paint Snake        
+        #bQuit = tk.Button(self.fr3, text="Quit", width=8, height=1, command=self.closeWindow)        # Button Quit/Exit
+        #bCreateWorld = tk.Button(self.fr3, text="load new Level",width=0, height=1, command=None)    # Button Create World
+        #bCreateSnake = tk.Button(self.fr3, text="restart",width=0, height=1, command=None)           # Button paint Snake        
         #bCreateWorld.pack(side="left", padx=10, pady=1,anchor='s')
         #bCreateSnake.pack(side="left", padx=10, pady=1,anchor='s')       
         #bQuit.pack(side="right", padx=10, pady=1, anchor='s')        
@@ -78,25 +78,77 @@ class GUI():
         #mytext = 'TESTTTTTT \n'
         #self.scroll_text.insert('insert', mytext)
 
-        # Labels
-        self.label_uhrzeit = tk.Label(self.fr1, textvariable=self.strv_zeitangabe,
-                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 20))
-        self.label_uhrzeit.pack(side="left", padx=10, pady=1,anchor='n')    
-        self.label_cycletime = tk.Label(self.fr1, textvariable=self.strv_cycletime,
-                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 20))
-        self.label_cycletime.pack(side="right", padx=10, pady=1,anchor='n')  
-
-
-
+        
         # Class calls
         self.snake = Snake(self.spielfeld_rows,self.spielfeld_columns,self.scroll_text)
         self.spielfeld = Spielfeld(self.canvas,self.snake,self.spielfeld_rows,self.spielfeld_columns,
                                    self.spielfeld_itemwidth,self.spielfeld_itemheight,scrollbox=self.scroll_text)
-        self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,canvas=self.canvas,scrollbox=self.scroll_text)
-        self.spielsteuerung = Spielsteuerung(self.snake,self.spielfeld,self.leveleditor,canvas=self.canvas,scrollbox=self.scroll_text)
+        self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,
+                                       canvas=self.canvas,scrollbox=self.scroll_text)
+        self.scoreboard = Scoreboard(spielfeld=self.spielfeld,snake=self.snake,
+                                     canvas=self.canvas,scrollbox=self.scroll_text)
+        self.spielsteuerung = Spielsteuerung(self.snake,self.spielfeld,self.leveleditor,self.scoreboard,
+                                             canvas=self.canvas,scrollbox=self.scroll_text)
         
 
-        self.create_keybindings()       # Funktion Keybindsings aufrufen
+        # Scoreboard variables
+        self.strv_player_name = tk.StringVar()
+        self.strv_player_name.set("horst")
+        self.strv_act_level = tk.StringVar()
+        self.strv_act_level.set("03")
+        self.strv_act_points = tk.StringVar()
+        self.strv_act_points.set("9935543")
+        self.strv_time_passed = tk.StringVar()
+        self.strv_time_passed.set("135s")
+        
+
+        # Labels
+        self.label_uhrzeit = tk.Label(self.fr1, textvariable=self.strv_zeitangabe,
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 14))
+        #self.label_uhrzeit.pack(side="left", padx=10, pady=1,anchor='n')
+        self.label_uhrzeit.grid(row=0,column=0,ipadx=5,padx=5,pady=5,rowspan=1,columnspan=1,sticky="nw")
+        
+        self.label_cycletime = tk.Label(self.fr1, textvariable=self.strv_cycletime,
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 14))
+        #self.label_cycletime.pack(side="right", padx=10, pady=1,anchor='n')  
+        self.label_cycletime.grid(row=0,column=2,ipadx=5,padx=5,pady=5,rowspan=1,columnspan=1,sticky="ne")
+
+
+        self.label_player = tk.Label(self.fr_scoreboard, text="player:",
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_player.grid(row=0,column=1,padx=5,pady=5,rowspan=1,columnspan=1,sticky="e")
+        self.label_player_name = tk.Label(self.fr_scoreboard, textvariable=self.strv_player_name,
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_player_name.grid(row=0,column=2,ipadx=0,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
+        self.label_time = tk.Label(self.fr_scoreboard, text="time passed:",
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_time.grid(row=1,column=1,padx=5,pady=5,rowspan=1,columnspan=1,sticky="e")
+        self.label_time_passed = tk.Label(self.fr_scoreboard, textvariable=self.strv_time_passed,
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_time_passed.grid(row=1,column=2,ipadx=0,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
+        
+        # separator
+        self.label_seperator = tk.Label(self.fr_scoreboard, text="",
+                                      bg='yellow', fg='#00bfff', width=10, height=0, font=("Arial", 10))
+        self.label_seperator.grid(row=0,column=3,ipadx=5,padx=5,pady=5,rowspan=2,columnspan=1,sticky="nesw")
+        ###########
+        
+        self.label_level = tk.Label(self.fr_scoreboard,  text="level:",
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_level.grid(row=0,column=4,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
+        self.label_act_level = tk.Label(self.fr_scoreboard, textvariable=self.strv_act_level,
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_act_level.grid(row=0,column=5,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="w")        
+        self.label_points = tk.Label(self.fr_scoreboard, text="points:",
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_points.grid(row=1,column=4,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")       
+        self.label_act_points = tk.Label(self.fr_scoreboard, textvariable=self.strv_act_points,
+                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+        self.label_act_points.grid(row=1,column=5,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="w")
+   
+
+
+
 
 
         # Menubar "Datei"-Menue
@@ -130,7 +182,9 @@ class GUI():
         
         self.master.config(menu=self.menubar)
 
-        
+
+
+        self.create_keybindings()       # Funktion Keybindsings aufrufen        
         self.main_loop()                # start mainloop
         #print(self.act_time, 'init class GUI done')
         
@@ -201,9 +255,6 @@ class GUI():
             self.spielfeld.edit_mode(coords,next_item_mode)            
 
     def start_leveleditor(self,command):
-        print('start_leveleditor')
-        print(len(self.spielfeld.spielfeld_db),self.spielfeld.spielfeld_db)
-        print(len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
         #self.spielsteuerung.reset()
 
         if command == 'create_level':
@@ -243,7 +294,51 @@ class GUI():
     def show_text(self, text):
         mytext = '{0:02d}:{1:02d}:{2:02d}:{3:03d}'.format(self.act_time.hour, self.act_time.minute, self.act_time.second,int(self.act_time.microsecond/1000)) + ' ' + text +'\n'
         self.scroll_text.insert('insert', mytext)
+##############################################################################################################
+##############################################################################################################
+##############################################################################################################  
+class Scoreboard():
+    """ Create a scroeboard and saves the values in file.
+        Also shows actual score information in the game window.
+            points for  actions:
+            level solved = 1000
+            eat apple    = 100
+            command sent = 10
+            speed_index  = (slow=1, medium=2, fast=5, ultra=10)
+            1s passed    = 1 x speed_index
+    """
+    def __init__(self,spielfeld,snake,canvas,scrollbox):
+        self.spielfeld = spielfeld
+        self.snake = snake
+        self.canvas = canvas
+        self.scrollbox = scrollbox
 
+        # total data for player
+        self.levels_solved = 0
+        self.apples_eaten = 0
+        self.commands_sent = 0
+        self.total_points = 0
+
+        # data for actual level shown in the game window
+        self.player_name = "horst"
+        self.act_level = 0
+        self.time_passed = 0
+        self.act_points = 0
+        
+        print('init class Scoreboard done')
+
+
+    def player_name(self):
+        return self.player_name
+
+    def act_level(self):
+        return self.act_level
+    
+    def act_points(self):
+        return act_points   
+
+    def time_passed(self):
+        return time_passed
 ##############################################################################################################
 ##############################################################################################################
 ##############################################################################################################   
@@ -316,15 +411,12 @@ class Leveleditor():
             print('canceled save level!')
 
     def load_level(self):       
-        
-        print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
-        print('Class snake positions:',len(self.snake.positions),self.snake.positions)
-        print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
-        print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
-        print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
-        print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
-
-        
+        #print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
+        #print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+        #print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
+        #print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
+        #print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
+        #print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
         snake_head = False       
         level_name = fdialog.askopenfilename(defaultextension=".txt", title="load snake level")
 
@@ -371,13 +463,13 @@ class Leveleditor():
                         self.spielfeld.empty_fields.append(coords)
                         
             print('------------')
-            print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
-            print('Class snake positions:',len(self.snake.positions),self.snake.positions)
-            print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
-            print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
-            print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
-            print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
-            print('level loaded from file:'+str(level_name))
+            #print('snake head:',self.spielfeld.snake_headposition ,'snake body:',self.spielfeld.snake_positions)
+            #print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+            #print('walls:',len(self.spielfeld.wall_positions),self.spielfeld.wall_positions)
+            #print('apples:',len(self.spielfeld.apple_positions),self.spielfeld.apple_positions)
+            #print('exit:', len(self.spielfeld.exit_position),self.spielfeld.exit_position)
+            #print('empty fields:',len(self.spielfeld.empty_fields),self.spielfeld.empty_fields)
+            #print('level loaded from file:'+str(level_name))
 
             self.spielfeld.act_level_data(command='save') # save level information in a new DB [necessary for restart!]
             self.edit_mode = False
@@ -398,10 +490,11 @@ class Spielsteuerung():
     """ Spielablauf und Collisionsauswertung.
     UI ==> spielsteuerung ==> spielfeld ==> Snake
     """
-    def __init__(self,snake,spielfeld,leveleditor,canvas,scrollbox):
+    def __init__(self,snake,spielfeld,leveleditor,scoreboard,canvas,scrollbox):
         self.snake = snake
         self.spielfeld = spielfeld
         self.leveleditor =leveleditor
+        self.scoreboard = scoreboard
         self.canvas = canvas
         self.scrollbox = scrollbox
         
@@ -452,9 +545,10 @@ class Spielsteuerung():
         
           
     def game_loop(self):
+        print('game_end:',self.game_end,' |start:',self.game_start,' |running:',self.game_running,' |paused:',self.game_paused,' |edit_mode:',self.leveleditor.edit_mode)
+        #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
         #Step 1: check if game not over           
         if not self.game_end:
-            
             # command queue for snake directions
             while self.commands:                                
                 #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
@@ -812,9 +906,12 @@ class Spielfeld():
         if len(self.apple_positions) == 0 and len(self.exit_position) == 0:  #Wenn keine Apples mehr da sind, erstelle den Ausgang nur 1mal
             self.create_exit()
 
-    def update_spielfeld_dict(self,item):
+    def update_spielfeld_dict(self,item,snake_head):
+        
         if item in self.snake_positions:
             self.spielfeld_db[item] = "S"
+            if snake_head:
+                self.snake_headposition = item
         if item in self.wall_positions:
             self.spielfeld_db[item] = "W"
         if item in self.apple_positions:
@@ -827,22 +924,24 @@ class Spielfeld():
             
 
     def edit_mode(self,coords,next_item_mode):
-        print('snake head:',self.snake_headposition ,'snake body:',self.snake_positions)
-        print('Class snake positions:',len(self.snake.positions),self.snake.positions)
-        print('walls:',len(self.wall_positions),self.wall_positions)
-        print('apples:',len(self.apple_positions),self.apple_positions)
-        print('exit:', len(self.exit_position),self.exit_position)
-        print('empty fields:',len(self.empty_fields),self.empty_fields)
+        snake_head = False
         
-        self.item_rotation = {"S":[self.snake_positions,"self.snake_positions",3,"#006400","snake"],
+        #print('snake head:',self.snake_headposition ,'snake body:',self.snake_positions)
+        #print('Class snake positions:',len(self.snake.positions),self.snake.positions)
+        #print('walls:',len(self.wall_positions),self.wall_positions)
+        #print('apples:',len(self.apple_positions),self.apple_positions)
+        #print('exit:', len(self.exit_position),self.exit_position)
+        #print('empty fields:',len(self.empty_fields),self.empty_fields)
+        
+        self.item_rotation = {"S":[self.snake_positions,"self.snake_positions",2,"#006400","snake"],
                               "W":[self.wall_positions,"self.wall_positions",1,"grey","wall"],
-                              "A":[self.apple_positions,"self.apple_positions",2,"red","apple"],
+                              "A":[self.apple_positions,"self.apple_positions",3,"red","apple"],
                               " ":[self.empty_fields,"self.empty_fields",0,"black","emtpy"],
                               "E":[self.exit_position,"self.exit_position",-1,"blue","exit"]
                               }
         
-        x = coords[0]//self.itemwidth
-        y = coords[1]//self.itemheight
+        x = coords[0] // self.itemwidth
+        y = coords[1] // self.itemheight
         item = (x, y)
         
             
@@ -855,13 +954,13 @@ class Spielfeld():
 
         try:
             index = db.index(item)
-            print('| field:',item, '| item_type:', self.spielfeld_db[item],'| found in:',db_name,'| item_index:', index, '| color=', color,'|')
+            #print('| field:',item, '| item_type:', self.spielfeld_db[item],'| found in:',db_name,'| item_index:', index, '| color=', color,'|')
             del db[db.index(item)]                          # delete item from specific DB
-            print('| field:',item, '| removed from:', db_name,'| item_index:', index,'|')
-
+            #print('| field:',item, '| removed from:', db_name,'| item_index:', index,'|')
         except ValueError:
-            print('| field:',item, '| item_type:', self.spielfeld_db[item])
-            print('==>>> item has no index! Could not be removed from db')
+            pass
+            #print('| field:',item, '| item_type:', self.spielfeld_db[item])
+            #print('==>>> item has no index! Could not be removed from db')
 
         next_item = db_index + next_item_mode
         if next_item > 3:
@@ -873,17 +972,24 @@ class Spielfeld():
             if next_item == element[2]:
                 db = element[0]
                 db_name = element[1]
-                db_index =temp[2]
+                db_index = element[2]
                 color = element[3]
                 tagname = element[4]
+                
+        
+        if db_index == 2 and len(db) == 0:        # Sneak head will be created, if no other snake item exist on the field.
+            snake_head = True
+            color = 'green'
+            
         db.append(item)                                     # add item to the new DB
         index = db.index(item)
-        print('| field:',item, '| saved in:', db_name,'| item_index:', index,'|')
+        #print('| field:',item, '| saved in:', db_name,'| item_index:', index,'|')
         
-        self.update_spielfeld_dict(item)                    # also add item to dict
+        self.update_spielfeld_dict(item,snake_head)     # also add item to dict
+
         self.canvas.itemconfigure(str(x)+'_'+str(y), fill=color, tags=(str(x)+'_'+str(y),tagname))
 
-        print('check if operation was succesful...')
+        #print('check if operation was succesful...')
         temp = self.item_rotation[self.spielfeld_db[item]]  # selects the item data list
         db = temp[0]
         index = db.index(item)
@@ -891,8 +997,8 @@ class Spielfeld():
         db_index =temp[2]
         color = temp[3]
         tagname = temp[4]
-        print('| field:',item,'| item_type:',self.spielfeld_db[item],'| found in:',db_name,'| item_index:',index,'| color=',color,'|')
-        print('self.spielfeld_db:',len(self.spielfeld_db),self.spielfeld_db)
+        #print('| field:',item,'| item_type:',self.spielfeld_db[item],'| found in:',db_name,'| item_index:',index,'| color=',color,'|')
+        #print('self.spielfeld_db:',len(self.spielfeld_db),self.spielfeld_db)
 
     def create_exit(self):
         self.empty_fields = []
@@ -1007,7 +1113,7 @@ class Spielfeld():
         #print('values loaded:.....',len(self.spielfeld_db),self.spielfeld_db)
         if self.spielfeld_db:
             self.fill_itemtype_db(database=self.spielfeld_db)                        # extract values to specific item_type lists
-            print('spielfeld reload done')
+            #print('spielfeld reload done')
         else:
             print('no data alavailable. You need to start a new game!')
 
