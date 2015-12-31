@@ -26,6 +26,8 @@ class GUI():
         self.spielfeld_itemwidth = 50
         self.spielfeld_itemheight = 50
 
+        self.speed_index = "speed_index_medium"
+
         self.cycle_time = 1                             # time in ms to wait for start next cycle
         self.time_last_cycle = datetime.now().time()
         self.cycle_counter = 0
@@ -78,7 +80,18 @@ class GUI():
         #mytext = 'TESTTTTTT \n'
         #self.scroll_text.insert('insert', mytext)
 
-        
+
+
+        # Scoreboard variables
+        self.strv_player_name = tk.StringVar()
+        self.strv_player_name.set("")
+        self.strv_act_level = tk.StringVar()
+        self.strv_act_level.set("")
+        self.strv_act_points = tk.StringVar()
+        self.strv_act_points.set("")
+        self.strv_time_passed = tk.StringVar()
+        self.strv_time_passed.set("")
+
         # Class calls
         self.snake = Snake(self.spielfeld_rows,self.spielfeld_columns,self.scroll_text)
         self.spielfeld = Spielfeld(self.canvas,self.snake,self.spielfeld_rows,self.spielfeld_columns,
@@ -86,21 +99,11 @@ class GUI():
         self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,
                                        canvas=self.canvas,scrollbox=self.scroll_text)
         self.scoreboard = Scoreboard(spielfeld=self.spielfeld,snake=self.snake,
-                                     canvas=self.canvas,scrollbox=self.scroll_text)
+                                     canvas=self.canvas,scrollbox=self.scroll_text,player_name=self.strv_player_name.get())
         self.spielsteuerung = Spielsteuerung(self.snake,self.spielfeld,self.leveleditor,self.scoreboard,
-                                             canvas=self.canvas,scrollbox=self.scroll_text)
-        
-
-        # Scoreboard variables
-        self.strv_player_name = tk.StringVar()
-        self.strv_player_name.set("horst")
-        self.strv_act_level = tk.StringVar()
-        self.strv_act_level.set("03")
-        self.strv_act_points = tk.StringVar()
-        self.strv_act_points.set("9935543")
-        self.strv_time_passed = tk.StringVar()
-        self.strv_time_passed.set("135s")
-        
+                                             canvas=self.canvas,scrollbox=self.scroll_text,speed_index=self.speed_index)
+        ############################################################################################
+    
 
         # Labels
         self.label_uhrzeit = tk.Label(self.fr1, textvariable=self.strv_zeitangabe,
@@ -115,39 +118,37 @@ class GUI():
 
 
         self.label_player = tk.Label(self.fr_scoreboard, text="player:",
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_player.grid(row=0,column=1,padx=5,pady=5,rowspan=1,columnspan=1,sticky="e")
         self.label_player_name = tk.Label(self.fr_scoreboard, textvariable=self.strv_player_name,
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_player_name.grid(row=0,column=2,ipadx=0,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
         self.label_time = tk.Label(self.fr_scoreboard, text="time passed:",
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_time.grid(row=1,column=1,padx=5,pady=5,rowspan=1,columnspan=1,sticky="e")
         self.label_time_passed = tk.Label(self.fr_scoreboard, textvariable=self.strv_time_passed,
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_time_passed.grid(row=1,column=2,ipadx=0,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
         
         # separator
         self.label_seperator = tk.Label(self.fr_scoreboard, text="",
-                                      bg='yellow', fg='#00bfff', width=10, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=5, height=0, font=("Arial", 10))
         self.label_seperator.grid(row=0,column=3,ipadx=5,padx=5,pady=5,rowspan=2,columnspan=1,sticky="nesw")
         ###########
         
         self.label_level = tk.Label(self.fr_scoreboard,  text="level:",
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_level.grid(row=0,column=4,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")
         self.label_act_level = tk.Label(self.fr_scoreboard, textvariable=self.strv_act_level,
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_act_level.grid(row=0,column=5,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="w")        
         self.label_points = tk.Label(self.fr_scoreboard, text="points:",
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_points.grid(row=1,column=4,padx=0,pady=5,rowspan=1,columnspan=1,sticky="e")       
         self.label_act_points = tk.Label(self.fr_scoreboard, textvariable=self.strv_act_points,
-                                      bg='yellow', fg='#00bfff', width=0, height=0, font=("Arial", 10))
+                                      bg='black', fg='#00bfff', width=0, height=0, font=("Arial", 10))
         self.label_act_points.grid(row=1,column=5,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="w")
    
-
-
 
 
 
@@ -158,7 +159,7 @@ class GUI():
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="Game", menu=self.filemenu)
         self.filemenu.add_command(label="new game",
-                                  command=self.spielsteuerung.new_game)
+                                  command=self.new_game)
         self.filemenu.add_command(label="restart level",
                                   command=self.spielsteuerung.restart_level)       
         self.filemenu.add_command(label="reset",
@@ -190,7 +191,38 @@ class GUI():
         
         self.show_text('init class GUI done')
         #################               Init class GUI beendet
-    
+
+    def topwindow_open(self): #creates a toplevel window to enter the players name
+        self.top = tk.Toplevel(bg='black')
+        self.top.title("Snake Py")
+        
+        L1 = tk.Label(self.top, text="enter player name:")
+        L1.grid(row=0,column=0,sticky="e")
+        
+        self.strv_name = tk.StringVar()
+        self.strv_name.set("")       
+        E1 = tk.Entry(self.top, bd =5, textvariable=self.strv_name)
+        E1.grid(row=0,column=1,sticky="w")
+        
+        button = tk.Button(self.top, text="OK", width=10,command=self.topwindow_close)
+        button.grid(row=1,column=0,columnspan=2,sticky="sew")
+
+    def topwindow_close(self): # close the toplevel window and displayes the name on the game window
+        self.scoreboard.player_name = self.strv_name.get()
+        print('self.strv_name.get()',self.strv_name.get())
+        if self.strv_name.get():
+            self.spielsteuerung.new_game()
+            self.top.destroy()
+        else:
+            self.top.destroy()
+            self.topwindow_open()
+        #print('self.scoreboard.player_name',self.scoreboard.player_name)
+
+    def new_game(self):
+        if self.strv_player_name.get():
+            self.spielsteuerung.new_game()
+        else:
+            self.topwindow_open()
 
 
     def main_loop(self):
@@ -210,15 +242,18 @@ class GUI():
                      (self.act_time.second - self.time_last_cycle.second)*1000) + (
                      (self.act_time.microsecond - self.time_last_cycle.microsecond)/1000)
         
-        # Step: call game handler game_loop
-        if time_delta >= 500:
+        # Step4: call game handler game_loop
+        if time_delta >= 250:
             self.strv_cycletime.set(str(int(time_delta))+' ms')
             self.time_last_cycle = self.act_time
             
-            self.spielsteuerung.game_loop()
-            
+            self.spielsteuerung.do_game_start_stop()
 
-        # Step5: start the loop again
+        # Step5: Scoreboard variables values
+        self.update_scoreboard_values()
+
+
+        # Step6: start the loop again
         self.master.after(self.cycle_time, self.main_loop)  # mainloop
 
 
@@ -253,6 +288,21 @@ class GUI():
         if self.leveleditor.edit_mode:
             coords = (self.event.x, self.event.y)
             self.spielfeld.edit_mode(coords,next_item_mode)            
+
+    def update_scoreboard_values(self):
+        act_time = datetime.now().time()
+        
+        self.strv_player_name.set("{0:>}".format(self.scoreboard.player_name))
+        self.strv_act_level.set("{0:>03d}".format(self.scoreboard.act_level))
+        self.strv_act_points.set("{0:>010d}".format(int(self.scoreboard.act_points)))
+        self.strv_time_passed.set("{0:>08.3f}s".format(self.scoreboard.time_passed))
+
+        if self.spielsteuerung.game_start:
+            time = self.scoreboard.calc_time_passed(self.scoreboard.time_level_start,act_time)
+            self.strv_time_passed.set("{0:>08.3f}s".format(time))
+            
+
+            
 
     def start_leveleditor(self,command):
         #self.spielsteuerung.reset()
@@ -301,44 +351,148 @@ class Scoreboard():
     """ Create a scroeboard and saves the values in file.
         Also shows actual score information in the game window.
             points for  actions:
-            level solved = 1000
-            eat apple    = 100
-            command sent = 10
+            level_solved = 1000
+            eat_apple    = 100
+            command_sent = 10
             speed_index  = (slow=1, medium=2, fast=5, ultra=10)
             1s passed    = 1 x speed_index
     """
-    def __init__(self,spielfeld,snake,canvas,scrollbox):
+    def __init__(self,spielfeld,snake,canvas,scrollbox,player_name):
         self.spielfeld = spielfeld
         self.snake = snake
         self.canvas = canvas
         self.scrollbox = scrollbox
 
-        # total data for player
+        # total data for player saved in the db
         self.levels_solved = 0
         self.apples_eaten = 0
         self.commands_sent = 0
+        self.total_time_passed = 0
         self.total_points = 0
 
         # data for actual level shown in the game window
-        self.player_name = "horst"
+        self.player_name = player_name
         self.act_level = 0
         self.time_passed = 0
         self.act_points = 0
+
+        # other variables
+        self.time_level_start = 0
+        self.time_level_end = 0
+
         
-        print('init class Scoreboard done')
+        # database
+        self.point_db = { 'level_solved': 1000,
+                          'eat_apple': 100,
+                          'command_sent' : 10,
+                          'speed_index_slow' : 1,
+                          'speed_index_medium' : 2,
+                          'speed_index_fast' : 5,
+                          'speed_index_ultra' : 10,
+                         }
+        
+        self.scoreboard_db = {self.player_name : [self.levels_solved, self.apples_eaten, self.commands_sent,
+                                                  self.total_time_passed, self.total_points]
+                             }
 
 
-    def player_name(self):
-        return self.player_name
+        self.load_db_file()
 
-    def act_level(self):
-        return self.act_level
+        #for item in self.scoreboard_db:
+        #    print('scoreboard_db:','player:',item,'stats:',self.scoreboard_db[item] )
+        #print('init class Scoreboard done')
+
+
+    def load_db_file(self):
+        try:
+            scoreboard_file = open("snake_scoreboard.txt", "r")
+            liste = scoreboard_file.read().splitlines()
+            scoreboard_file.close()
+            if liste:
+                #print('liste:', liste)
+                for item in liste:
+                    temp = item.split(" ")
+                    #print('temp =',temp)
+                    self.scoreboard_db[temp[0]] = [temp[1],temp[2],temp[3],temp[4],temp[5]]
+            else:
+                self.create_db_file()
+
+        except:
+            print('===> no scoreboard file found. It will be created now!')
+            self.create_db_file()
+
+
+    def create_db_file(self):
+        #try:
+            scoreboard_file = open("snake_scoreboard.txt", "w")
+            print('----------------------------')
+            for line in self.scoreboard_db:
+                temp = self.scoreboard_db[line]
+                out_line = "{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}\n".format(line,temp[0],temp[1],temp[2],temp[3],temp[4])
+                print("{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}".format(line,temp[0],temp[1],temp[2],temp[3],temp[4]))
+                #print(out_line)
+                scoreboard_file.write(out_line)
+            print('----------------------------')
+            scoreboard_file.close()
+        #except:        
+            #print('===> scoreboard file could not be created!')
+
+
+    def game_start(self):
+        self.new_level()
+
+    def new_level(self):
+        self.act_level += 1
+
     
-    def act_points(self):
-        return act_points   
+    def calc_act_points(self,reason):
+        """ reason = level_solved, eat_apple, command_sent """
+        self.act_points += self.point_db[reason]        
+        return self.act_points   
 
-    def time_passed(self):
-        return time_passed
+    def calc_time_passed(self,start,end): 
+        """ calculates time in s between a start and an end point """
+        self.time_passed = ((end.hour - start.hour)*3600*1000 +
+                            (end.minute - start.minute)*60*1000 +
+                            (end.second - start.second)*1000 +
+                            (end.microsecond - start.microsecond)/1000)/1000
+        return self.time_passed
+
+    def output_level_time(self):
+         """ calculates the time spent in this level """
+         self.calc_time_passed(self.time_level_start, self.time_level_end)
+             
+    def calc_total_points(self,speed_index):
+        """ calculates total points until game over
+        'speed_index_slow' : 1
+        'speed_index_medium' : 2
+        'speed_index_fast' : 5
+        'speed_index_ultra' : 10 """
+        self.total_points += self.act_points    # adds act_points for actual level
+        self.total_points += (self.time_passed * self.point_db[speed_index]) # adds spent time * time_multiplier
+        self.act_points = self.total_points
+        
+
+    def reset(self):
+        # total data for player saved in the db
+        self.levels_solved = 0
+        self.apples_eaten = 0
+        self.commands_sent = 0
+        self.total_time_passed = 0
+        self.total_points = 0
+
+        # data for actual level shown in the game window
+        #self.player_name = 0
+        self.act_level = 0
+        self.time_passed = 0
+        self.act_points = 0
+
+        # other variables
+        self.time_level_start = 0
+        self.time_level_end = 0
+        
+        print("reset scoreboard done")
+    
 ##############################################################################################################
 ##############################################################################################################
 ##############################################################################################################   
@@ -490,13 +644,14 @@ class Spielsteuerung():
     """ Spielablauf und Collisionsauswertung.
     UI ==> spielsteuerung ==> spielfeld ==> Snake
     """
-    def __init__(self,snake,spielfeld,leveleditor,scoreboard,canvas,scrollbox):
+    def __init__(self,snake,spielfeld,leveleditor,scoreboard,canvas,scrollbox,speed_index):
         self.snake = snake
         self.spielfeld = spielfeld
         self.leveleditor =leveleditor
         self.scoreboard = scoreboard
         self.canvas = canvas
         self.scrollbox = scrollbox
+        self.speed_index = speed_index
         
         self.snakedirection = (0, 0)
         self.no_collision = 1
@@ -542,11 +697,11 @@ class Spielsteuerung():
         if value != (0, 0):
             self.commands.append(value) # add commant to the queue
         #print(self.commands)
-        
-          
-    def game_loop(self):
-        print('game_end:',self.game_end,' |start:',self.game_start,' |running:',self.game_running,' |paused:',self.game_paused,' |edit_mode:',self.leveleditor.edit_mode)
+
+    def do_game_start_stop(self):
+        #print(datetime.now().time(),'|game_end:',self.game_end,'|start:',self.game_start,'|running:',self.game_running,'|paused:',self.game_paused,'|edit_mode:',self.leveleditor.edit_mode)
         #print(datetime.now().time(),'Loop_Start' ,'direction=',self.snakedirection,'commands=', self.commands, 'snake body:',self.spielfeld.snake_positions)
+
         #Step 1: check if game not over           
         if not self.game_end:
             # command queue for snake directions
@@ -561,11 +716,13 @@ class Spielsteuerung():
                     print('_____________________ 180 degree turn blocked')
                     continue
                 else:
-                    self.snakedirection = (newx, newy)
+                    self.snakedirection = (newx, newy)          # command taken from list
+                    self.scoreboard.calc_act_points(reason = "command_sent")
                     break
 
             if self.snakedirection != (0, 0) and not self.game_start:
                 self.game_start = True
+                self.scoreboard.time_level_start = datetime.now().time()
                 #print('==> game starts...')
                 self.show_text('==> game starts...')
 
@@ -578,37 +735,47 @@ class Spielsteuerung():
                 #print('==> game continues')
             if self.game_start:                         # reset Leveleditor Edit-mode
                 self.leveleditor.edit_mode = False
-            
-        #Step 2: check if game running or paused
+
+        #Step 2: check if game running ===> call game_loop
         if self.game_running:
-            self.new_snake_headposition = self.snake.move(self.snakedirection)    #get the new headposition       
-            #print('snake wants to moves to field:',self.new_snake_headposition)
+            self.game_loop()
+        
+          
+    def game_loop(self):
+        #print(datetime.now().time(),'game_loop start:')
+        self.new_snake_headposition = self.snake.move(self.snakedirection)    #get the new headposition       
+        #print('snake wants to moves to field:',self.new_snake_headposition)
+
         #Step3: check collision and create game status       
-            self.game_status = self.collision_detection()
-            #print('self.game_status', self.game_status)
+        self.game_status = self.collision_detection()
+        #print('self.game_status', self.game_status)
 
         #Step4: evaluate the game status and update the playground, database and items
             
-            # 4.1 no collision ==> update snake & apples
-            if self.game_status == self.no_collision:
-                    self.empty_field = self.snake.update_position()
-                    #print('empty field=',self.empty_field,'snake=',self.snake.positions)
-                    self.spielfeld.update_screen(self.new_snake_headposition, self.empty_field, eat_apple=False)
-                    
-            # 4.2 collision detected! ==> game over!               
-            elif self.game_status == self.collision:
-                    self.game_over()
-            # 4.3 eat apple ==> snake grows                
-            elif self.game_status == self.eat_apple:
-                    self.snake.eat_apple()
-                    self.empty_field = self.snake.update_position()
-                    #print('empty field=',self.empty_field)
-                    self.spielfeld.update_screen(self.new_snake_headposition, self.empty_field, eat_apple=True)
-                    self.game_status = self.no_collision
-            # 4.4 exit found ==> game win!               
-            elif self.game_status == self.pass_exit:
-                    self.game_win()
-            #print(datetime.now().time(),'Loop_End' ,'direction=',self.snakedirection,'commands=', self.commands)
+        # 4.1 no collision ==> update snake & apples
+        if self.game_status == self.no_collision:
+            self.empty_field = self.snake.update_position()
+            #print('empty field=',self.empty_field,'snake=',self.snake.positions)
+            self.spielfeld.update_screen(self.new_snake_headposition, self.empty_field, eat_apple=False) 
+                
+        # 4.2 collision detected! ==> game over!               
+        elif self.game_status == self.collision:
+            self.game_over()
+            
+        # 4.3 eat apple ==> snake grows                
+        elif self.game_status == self.eat_apple:
+            self.snake.eat_apple()
+            self.empty_field = self.snake.update_position()
+            #print('empty field=',self.empty_field)
+            self.spielfeld.update_screen(self.new_snake_headposition, self.empty_field, eat_apple=True)
+            self.game_status = self.no_collision
+            self.scoreboard.calc_act_points(reason = "eat_apple")
+            
+        # 4.4 exit found ==> game win!               
+        elif self.game_status == self.pass_exit:
+            self.game_win()
+        
+        #print(datetime.now().time(),'Loop_End' ,'direction=',self.snakedirection,'commands=', self.commands)
             
     def collision_detection(self):
         if self.new_snake_headposition in self.spielfeld.snake_positions:
@@ -634,13 +801,16 @@ class Spielsteuerung():
             return self.no_collision
 
     def new_game(self):
-        self.reset()                            
+        self.reset()
         self.spielfeld.load_next_level()        # create a new game and DB
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
+        self.scoreboard.reset()
+        self.scoreboard.game_start()
 
     def restart_level(self):
         self.reset()
+        self.scoreboard.reset()
         self.spielfeld.restart()                # load game data back from DB and restart from the beginning
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
@@ -654,6 +824,10 @@ class Spielsteuerung():
         self.spielfeld.reason_game_over(self.new_snake_headposition)
         #self.spielfeld.show_status()
 
+        self.scoreboard.time_level_end = datetime.now().time()
+        self.scoreboard.output_level_time()
+        self.scoreboard.calc_total_points(speed_index=self.speed_index)
+
     def game_win(self):
         self.game_running = False
         self.game_start = False
@@ -661,6 +835,11 @@ class Spielsteuerung():
         self.commands = []
         self.show_text('==> You win!')
         #self.spielfeld.show_status()
+
+        self.scoreboard.time_level_end = datetime.now().time()
+        self.scoreboard.output_level_time()
+        self.scoreboard.calc_act_points(reason = "level_solved")
+        self.scoreboard.calc_total_points(speed_index=self.speed_index)
 
 
     def reset(self):
@@ -675,6 +854,7 @@ class Spielsteuerung():
         self.snake.reset()
         self.spielfeld.reset()
         self.spielfeld.create_playground()
+        self.scoreboard.reset()
         self.show_text('reset spielsteuerung done')
         print("reset spielsteuerung")
 
