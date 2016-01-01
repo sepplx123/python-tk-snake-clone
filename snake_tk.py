@@ -26,7 +26,16 @@ class GUI():
         self.spielfeld_itemwidth = 50
         self.spielfeld_itemheight = 50
 
-        self.speed_index = "speed_index_medium"
+
+        self.speed_index = tk.StringVar()
+        self.speed_index.set("")
+        
+        self.speed_selector = { "" : 900,
+                                "speed_index_slow" : 500 ,
+                                "speed_index_medium" : 350 ,
+                                "speed_index_fast" : 250 ,
+                                "speed_index_ultra" : 50
+                               }
 
         self.cycle_time = 1                             # time in ms to wait for start next cycle
         self.time_last_cycle = datetime.now().time()
@@ -41,7 +50,7 @@ class GUI():
         self.strv_zeitangabe = tk.StringVar()           # actual time shown above
         self.strv_zeitangabe.set('00:00:00')
         self.strv_cycletime = tk.StringVar()            # cycletime
-        self.strv_cycletime.set('00:00:00')
+        self.strv_cycletime.set('000ms')
 
         # festlegen der sonstigen Optionen wie Titel, Geometry, etc.
         self.master.configure(background='black')
@@ -192,24 +201,54 @@ class GUI():
         self.show_text('init class GUI done')
         #################               Init class GUI beendet
 
-    def topwindow_open(self): #creates a toplevel window to enter the players name
+    def new_game(self):
+        if self.strv_player_name.get():
+            self.spielsteuerung.new_game()
+        else:
+            self.topwindow_open_newgame()
+            
+    def topwindow_open_newgame(self):
+        """ creates a toplevel window to enter the players name """
+        print('Window opens: self.speed_index =',self.speed_index.get())
         self.top = tk.Toplevel(bg='black')
         self.top.title("Snake Py")
-        
-        L1 = tk.Label(self.top, text="enter player name:")
-        L1.grid(row=0,column=0,sticky="e")
-        
-        self.strv_name = tk.StringVar()
-        self.strv_name.set("")       
-        E1 = tk.Entry(self.top, bd =5, textvariable=self.strv_name)
-        E1.grid(row=0,column=1,sticky="w")
-        
-        button = tk.Button(self.top, text="OK", width=10,command=self.topwindow_close)
-        button.grid(row=1,column=0,columnspan=2,sticky="sew")
 
-    def topwindow_close(self): # close the toplevel window and displayes the name on the game window
+        self.strv_name = tk.StringVar()
+        self.strv_name.set("")
+     
+        L1 = tk.Label(self.top, text="enter player name:")
+        L1.grid(row=0,column=0,ipadx= 5,padx=10,pady=5,sticky="e")
+        E1 = tk.Entry(self.top, bd =5, fg="blue",textvariable=self.strv_name)
+        E1.grid(row=0,column=1,columnspan=5,padx=10,pady=5,sticky="w")
+        L2 = tk.Label(self.top, text="select difficulty:")
+        L2.grid(row=1,column=0,ipadx= 15,padx=10,pady=5,sticky="w")
+
+        rb1 = tk.Radiobutton(self.top, width=7, text="slow")
+        rb2 = tk.Radiobutton(self.top, width=7, text="medium")
+        rb3 = tk.Radiobutton(self.top, width=7, text="fast")
+        rb4 = tk.Radiobutton(self.top, width=7, text="ultra")
+        
+        rb1.grid(row=1,column=1,padx=10,pady=5,sticky="e")
+        rb2.grid(row=1,column=2,padx=10,pady=5,sticky="e")
+        rb3.grid(row=1,column=3,padx=10,pady=5,sticky="e")
+        rb4.grid(row=1,column=4,padx=10,pady=5,sticky="e")
+
+        rb1.config(variable=self.speed_index,value="speed_index_slow",indicatoron=0,fg="blue",activeforeground="blue",activebackground="green",selectcolor="green")
+        rb2.config(variable=self.speed_index,value="speed_index_medium",indicatoron=0,fg="blue",activeforeground="blue",activebackground="green",selectcolor="green")
+        rb3.config(variable=self.speed_index,value="speed_index_fast",indicatoron=0,fg="blue",activeforeground="blue",activebackground="green",selectcolor="green")
+        rb4.config(variable=self.speed_index,value="speed_index_ultra",indicatoron=0,fg="blue",activeforeground="blue",activebackground="green",selectcolor="green")
+
+        rb1.select()
+        rb2.deselect()
+        rb3.deselect()
+        rb4.deselect()
+        
+        button = tk.Button(self.top, text="OK", width=10,command=self.topwindow_close_newgame)
+        button.grid(row=5,column=0,columnspan=1,padx=10,pady=5,sticky="sew")
+
+    def topwindow_close_newgame(self):
+        """ close the toplevel window and displayes the name on the game window """
         self.scoreboard.player_name = self.strv_name.get()
-        print('self.strv_name.get()',self.strv_name.get())
         if self.strv_name.get():
             self.spielsteuerung.new_game()
             self.top.destroy()
@@ -218,11 +257,7 @@ class GUI():
             self.topwindow_open()
         #print('self.scoreboard.player_name',self.scoreboard.player_name)
 
-    def new_game(self):
-        if self.strv_player_name.get():
-            self.spielsteuerung.new_game()
-        else:
-            self.topwindow_open()
+
 
 
     def main_loop(self):
@@ -243,12 +278,13 @@ class GUI():
                      (self.act_time.microsecond - self.time_last_cycle.microsecond)/1000)
         
         # Step4: call game handler game_loop
-        if time_delta >= 250:
-            self.strv_cycletime.set(str(int(time_delta))+' ms')
+        if time_delta >= self.speed_selector[self.speed_index.get()]:
+            self.strv_cycletime.set("{0:>03d}ms".format(int(time_delta)))
             self.time_last_cycle = self.act_time
             
             self.spielsteuerung.do_game_start_stop()
-
+ 
+            
         # Step5: Scoreboard variables values
         self.update_scoreboard_values()
 
@@ -294,16 +330,13 @@ class GUI():
         
         self.strv_player_name.set("{0:>}".format(self.scoreboard.player_name))
         self.strv_act_level.set("{0:>03d}".format(self.scoreboard.act_level))
-        self.strv_act_points.set("{0:>010d}".format(int(self.scoreboard.act_points)))
-        self.strv_time_passed.set("{0:>08.3f}s".format(self.scoreboard.time_passed))
+        self.strv_act_points.set("{0:>08d}".format(int(self.scoreboard.act_points)))
+        self.strv_time_passed.set("{0:>07.3f}s".format(self.scoreboard.time_passed))
 
         if self.spielsteuerung.game_start:
             time = self.scoreboard.calc_time_passed(self.scoreboard.time_level_start,act_time)
-            self.strv_time_passed.set("{0:>08.3f}s".format(time))
+            self.strv_time_passed.set("{0:>07.3f}s".format(time))
             
-
-            
-
     def start_leveleditor(self,command):
         #self.spielsteuerung.reset()
 
@@ -351,10 +384,10 @@ class Scoreboard():
     """ Create a scroeboard and saves the values in file.
         Also shows actual score information in the game window.
             points for  actions:
-            level_solved = 1000
-            eat_apple    = 100
-            command_sent = 10
-            speed_index  = (slow=1, medium=2, fast=5, ultra=10)
+            level_solved = 100000
+            eat_apple    = 1000
+            command_sent = 100
+            speed_index  = (slow=1, medium=10, fast=100, ultra=1000)
             1s passed    = 1 x speed_index
     """
     def __init__(self,spielfeld,snake,canvas,scrollbox,player_name):
@@ -382,13 +415,13 @@ class Scoreboard():
 
         
         # database
-        self.point_db = { 'level_solved': 1000,
-                          'eat_apple': 100,
-                          'command_sent' : 10,
+        self.point_db = { 'level_solved': 100000,
+                          'eat_apple': 1000,
+                          'command_sent' : 100,
                           'speed_index_slow' : 1,
-                          'speed_index_medium' : 2,
-                          'speed_index_fast' : 5,
-                          'speed_index_ultra' : 10,
+                          'speed_index_medium' : 10,
+                          'speed_index_fast' : 100,
+                          'speed_index_ultra' : 1000,
                          }
         
         self.scoreboard_db = {self.player_name : [self.levels_solved, self.apples_eaten, self.commands_sent,
@@ -439,10 +472,12 @@ class Scoreboard():
 
 
     def game_start(self):
-        self.new_level()
+        self.act_level = 1
 
-    def new_level(self):
+    def next_level(self):
         self.act_level += 1
+        self.act_points = 0
+        self.total_points = self.total_points
 
     
     def calc_act_points(self,reason):
@@ -469,7 +504,7 @@ class Scoreboard():
         'speed_index_fast' : 5
         'speed_index_ultra' : 10 """
         self.total_points += self.act_points    # adds act_points for actual level
-        self.total_points += (self.time_passed * self.point_db[speed_index]) # adds spent time * time_multiplier
+        self.total_points += (self.time_passed * self.point_db[speed_index.get()]) # adds spent time * time_multiplier
         self.act_points = self.total_points
         
 
@@ -982,7 +1017,7 @@ class Spielfeld():
         self.itemheight = spielfeld_itemheight
         self.scrollbox = scrollbox
 
-        self.apples_amount = 15
+        self.apples_amount = 5
         self.walls_amount = 5
 
         self.spielfeld_db = {}         
