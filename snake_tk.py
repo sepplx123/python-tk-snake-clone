@@ -26,7 +26,6 @@ class GUI():
         self.spielfeld_itemwidth = 50
         self.spielfeld_itemheight = 50
 
-
         self.speed_index = tk.StringVar()
         self.speed_index.set("")
         
@@ -36,6 +35,8 @@ class GUI():
                                 "speed_index_fast" : 250 ,
                                 "speed_index_ultra" : 50
                                }
+
+        self.topwindow_active = False
 
         self.cycle_time = 1                             # time in ms to wait for start next cycle
         self.time_last_cycle = datetime.now().time()
@@ -159,8 +160,6 @@ class GUI():
         self.label_act_points.grid(row=1,column=5,ipadx=0,padx=5,pady=5,rowspan=1,columnspan=1,sticky="w")
    
 
-
-
         # Menubar "Datei"-Menue
         self.menubar = tk.Menu(self.master)
         
@@ -209,9 +208,10 @@ class GUI():
             
     def topwindow_open_newgame(self):
         """ creates a toplevel window to enter the players name """
-        print('Window opens: self.speed_index =',self.speed_index.get())
+        self.topwindow_active = True
+        
         self.top = tk.Toplevel(bg='black')
-        self.top.title("Snake Py")
+        self.top.title("Snake - configure game settings")
 
         self.strv_name = tk.StringVar()
         self.strv_name.set("")
@@ -252,11 +252,72 @@ class GUI():
         if self.strv_name.get():
             self.spielsteuerung.new_game()
             self.top.destroy()
+            self.topwindow_active = False
         else:
             self.top.destroy()
+            self.topwindow_active = False
             self.topwindow_open()
         #print('self.scoreboard.player_name',self.scoreboard.player_name)
 
+
+    def game_end_continue(self):
+        if self.spielsteuerung.game_end and not self.topwindow_active:
+            self.topwindow_open_game_end_continue()
+
+
+    def topwindow_open_game_end_continue(self):
+        self.topwindow_active = True
+        
+        self.top = tk.Toplevel(bg='black')
+        self.top.title("Snake - Level finished")
+
+        L0 = tk.Label(self.top, fg="blue",text="<<<<<   Congratulations! You win!!!   >>>>>")
+        L0.grid(row=0,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
+        
+        L1 = tk.Label(self.top, fg="blue",text="levels passed:")
+        L1.grid(row=1,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L1_value = tk.Label(self.top, fg="blue",text="{0:>03d}".format(self.scoreboard.act_level))
+        L1_value.grid(row=1,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        
+        L2 = tk.Label(self.top, fg="blue",text="time played:")
+        L2.grid(row=2,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L2_value = tk.Label(self.top, fg="blue",text="{0:>07.3f}s".format(self.scoreboard.time_passed))
+        L2_value.grid(row=2,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        
+        L3 = tk.Label(self.top, fg="blue",text="points this level:")
+        L3.grid(row=3,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L3_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.act_points)))
+        L3_value.grid(row=3,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        
+        L4 = tk.Label(self.top, fg="blue",text="total points:")
+        L4.grid(row=4,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L4_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.total_points)))
+        L4_value.grid(row=4,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        
+        L5 = tk.Label(self.top, fg="blue",text="Do you want to load next level?")
+        L5.grid(row=5,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
+
+
+        b_save = tk.Button(self.top, fg="blue",text="save", width=8,command=None)
+        b_save.grid(row=6,column=3,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")        
+        b_continue = tk.Button(self.top, fg="blue",text="continue", width=8,command=None)
+        b_continue.grid(row=6,column=4,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")
+        b_end = tk.Button(self.top, fg="blue",text="end", width=8,command=self.topwindow_close_game_end_continue)
+        b_end.grid(row=6,column=5,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")
+
+        
+        if self.spielsteuerung.level_passed:
+            # Buttons continue or end or maybe save!
+            pass
+        else:
+            pass
+            # Hide button continue and make end to OK  
+
+        
+    def topwindow_close_game_end_continue(self):
+        self.top.destroy()
+        self.topwindow_active = False
+        
 
 
 
@@ -288,8 +349,11 @@ class GUI():
         # Step5: Scoreboard variables values
         self.update_scoreboard_values()
 
+        # Step6 game end or game win and continue
+        self.game_end_continue()
 
-        # Step6: start the loop again
+
+        # Step7: start the loop again
         self.master.after(self.cycle_time, self.main_loop)  # mainloop
 
 
@@ -479,6 +543,12 @@ class Scoreboard():
         self.act_points = 0
         self.total_points = self.total_points
 
+    def level_summary(self):
+        print('Level', self.act_level,'passed')
+        print('time needed:', self.time_passed)
+        print('Total Points:', self.total_points)
+        print('------------------------------------------------')
+
     
     def calc_act_points(self,reason):
         """ reason = level_solved, eat_apple, command_sent """
@@ -496,6 +566,7 @@ class Scoreboard():
     def output_level_time(self):
          """ calculates the time spent in this level """
          self.calc_time_passed(self.time_level_start, self.time_level_end)
+         return self.time_passed
              
     def calc_total_points(self,speed_index):
         """ calculates total points until game over
@@ -703,6 +774,7 @@ class Spielsteuerung():
         self.game_paused = False
         self.commands = []
         self.keysym = ""
+        self.level_passed = False
         self.show_text('init class Spielsteuerung done')
 
 
@@ -854,6 +926,7 @@ class Spielsteuerung():
         self.game_running = False
         self.game_start = False
         self.game_end = True
+        self.level_passed = False
         self.commands = []
         self.show_text('==> Game Over!')
         self.spielfeld.reason_game_over(self.new_snake_headposition)
@@ -862,11 +935,13 @@ class Spielsteuerung():
         self.scoreboard.time_level_end = datetime.now().time()
         self.scoreboard.output_level_time()
         self.scoreboard.calc_total_points(speed_index=self.speed_index)
+        print('self.game_end =',self.game_end,' self.level_passed=',self.level_passed)
 
     def game_win(self):
         self.game_running = False
         self.game_start = False
         self.game_end = True
+        self.level_passed = True
         self.commands = []
         self.show_text('==> You win!')
         #self.spielfeld.show_status()
@@ -884,6 +959,7 @@ class Spielsteuerung():
         self.game_start = False
         self.game_running = False
         self.game_end = False
+        self.level_passed = False
         self.commands = []
         
         self.snake.reset()
