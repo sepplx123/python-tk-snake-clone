@@ -37,6 +37,7 @@ class GUI():
                                }
 
         self.topwindow_active = False
+        self.topwindow_watched = False
 
         self.cycle_time = 1                             # time in ms to wait for start next cycle
         self.time_last_cycle = datetime.now().time()
@@ -261,8 +262,11 @@ class GUI():
 
 
     def game_end_continue(self):
-        if self.spielsteuerung.game_end and not self.topwindow_active:
+        if self.spielsteuerung.game_end and (not self.topwindow_active and not self.topwindow_watched):
             self.topwindow_open_game_end_continue()
+            
+        if not self.spielsteuerung.game_end and self.topwindow_watched: 
+            self.topwindow_watched = False  # reset window watched variable
 
 
     def topwindow_open_game_end_continue(self):
@@ -274,35 +278,51 @@ class GUI():
         L0 = tk.Label(self.top, fg="blue",text="<<<<<   Congratulations! You win!!!   >>>>>")
         L0.grid(row=0,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
         
-        L1 = tk.Label(self.top, fg="blue",text="levels passed:")
-        L1.grid(row=1,column=0,ipadx=0,padx=5,pady=5,sticky="e")
-        L1_value = tk.Label(self.top, fg="blue",text="{0:>03d}".format(self.scoreboard.act_level))
-        L1_value.grid(row=1,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L1_0 = tk.Label(self.top, fg="blue",text="actual level:")
+        L1_0.grid(row=1,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L1_0_value = tk.Label(self.top, fg="blue",text="{0:>03d}".format(self.scoreboard.act_level))
+        L1_0_value.grid(row=1,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L1_1 = tk.Label(self.top, fg="blue",text="levels solved:")
+        L1_1.grid(row=1,column=4,ipadx=0,padx=5,pady=5,sticky="e")
+        L1_1_value = tk.Label(self.top, fg="blue",text="{0:>03d}".format(self.scoreboard.levels_solved))
+        L1_1_value.grid(row=1,column=5,ipadx=0,padx=0,pady=5,sticky="w")       
         
-        L2 = tk.Label(self.top, fg="blue",text="time played:")
-        L2.grid(row=2,column=0,ipadx=0,padx=5,pady=5,sticky="e")
-        L2_value = tk.Label(self.top, fg="blue",text="{0:>07.3f}s".format(self.scoreboard.time_passed))
-        L2_value.grid(row=2,column=1,ipadx=0,padx=0,pady=5,sticky="w")
-        
-        L3 = tk.Label(self.top, fg="blue",text="points this level:")
-        L3.grid(row=3,column=0,ipadx=0,padx=5,pady=5,sticky="e")
-        L3_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.act_points)))
-        L3_value.grid(row=3,column=1,ipadx=0,padx=0,pady=5,sticky="w")
-        
-        L4 = tk.Label(self.top, fg="blue",text="total points:")
-        L4.grid(row=4,column=0,ipadx=0,padx=5,pady=5,sticky="e")
-        L4_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.total_points)))
-        L4_value.grid(row=4,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L2_0 = tk.Label(self.top, fg="blue",text="time this level:")
+        L2_0.grid(row=2,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L2_0_value = tk.Label(self.top, fg="blue",text="{0:>07.3f}s".format(self.scoreboard.time_passed))
+        L2_0_value.grid(row=2,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L2_1 = tk.Label(self.top, fg="blue",text="total time played:")
+        L2_1.grid(row=2,column=4,ipadx=0,padx=5,pady=5,sticky="e")
+        L2_1_value = tk.Label(self.top, fg="blue",text="{0:>07.3f}s".format(self.scoreboard.total_time_passed))
+        L2_1_value.grid(row=2,column=5,ipadx=0,padx=0,pady=5,sticky="w")
+
+        L3_0 = tk.Label(self.top, fg="blue",text="points this level:")
+        L3_0.grid(row=3,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L3_0_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.act_points)))
+        L3_0_value.grid(row=3,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L3_1 = tk.Label(self.top, fg="blue",text="total points:")
+        L3_1.grid(row=3,column=4,ipadx=0,padx=5,pady=5,sticky="e")
+        L3_1_value = tk.Label(self.top, fg="blue",text="{0:>08d}".format(int(self.scoreboard.total_points)))
+        L3_1_value.grid(row=3,column=5,ipadx=0,padx=0,pady=5,sticky="w")
+
+        L4_0 = tk.Label(self.top, fg="blue",text="total apples eaten:")
+        L4_0.grid(row=4,column=0,ipadx=0,padx=5,pady=5,sticky="e")
+        L4_0_value = tk.Label(self.top, fg="blue",text="{0:>06d}".format(self.scoreboard.apples_eaten))
+        L4_0_value.grid(row=4,column=1,ipadx=0,padx=0,pady=5,sticky="w")
+        L4_1 = tk.Label(self.top, fg="blue",text="total commands sent:")
+        L4_1.grid(row=4,column=4,ipadx=0,padx=5,pady=5,sticky="e")
+        L4_1_value = tk.Label(self.top, fg="blue",text="{0:>06d}".format(self.scoreboard.commands_sent))
+        L4_1_value.grid(row=4,column=5,ipadx=0,padx=0,pady=5,sticky="w")
         
         L5 = tk.Label(self.top, fg="blue",text="Do you want to load next level?")
         L5.grid(row=5,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
 
 
-        b_save = tk.Button(self.top, fg="blue",text="save", width=8,command=None)
+        b_save = tk.Button(self.top, fg="blue",text="save", width=8,command=self.topwindow_close_save_player)
         b_save.grid(row=6,column=3,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")        
-        b_continue = tk.Button(self.top, fg="blue",text="continue", width=8,command=None)
+        b_continue = tk.Button(self.top, fg="blue",text="continue", width=8,command=self.topwindow_close_game_continue)
         b_continue.grid(row=6,column=4,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")
-        b_end = tk.Button(self.top, fg="blue",text="end", width=8,command=self.topwindow_close_game_end_continue)
+        b_end = tk.Button(self.top, fg="blue",text="end", width=8,command=self.topwindow_close_game_end)
         b_end.grid(row=6,column=5,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")
 
         
@@ -313,13 +333,24 @@ class GUI():
             pass
             # Hide button continue and make end to OK  
 
-        
-    def topwindow_close_game_end_continue(self):
+    def topwindow_close_game_end(self):
+        self.topwindow_watched = True
         self.top.destroy()
         self.topwindow_active = False
-        
+        #self.spielsteuerung.reset()         # reset everything
+        #self.scoreboard.reset()             # reset scoreboard
 
+    def topwindow_close_game_continue(self):
+        self.topwindow_watched = True
+        self.top.destroy()
+        self.topwindow_active = False
+        self.spielsteuerung.next_level()     # lead next level and reset variables
 
+    def topwindow_close_save_player(self):
+        self.topwindow_watched = True
+        self.top.destroy()
+        self.topwindow_active = False
+        self.scoreboard.save_player()        # save player data in scoreboard_file       
 
     def main_loop(self):
         """ Updates the actual time and represents the mainloop.
@@ -448,10 +479,10 @@ class Scoreboard():
     """ Create a scroeboard and saves the values in file.
         Also shows actual score information in the game window.
             points for  actions:
-            level_solved = 100000
+            level_solved = 10000
             eat_apple    = 1000
             command_sent = 100
-            speed_index  = (slow=1, medium=10, fast=100, ultra=1000)
+            speed_index  = (slow=100, medium=250, fast=500, ultra=1000)
             1s passed    = 1 x speed_index
     """
     def __init__(self,spielfeld,snake,canvas,scrollbox,player_name):
@@ -479,12 +510,12 @@ class Scoreboard():
 
         
         # database
-        self.point_db = { 'level_solved': 100000,
-                          'eat_apple': 1000,
-                          'command_sent' : 100,
-                          'speed_index_slow' : 1,
-                          'speed_index_medium' : 10,
-                          'speed_index_fast' : 100,
+        self.point_db = { 'level_solved': 10000, 
+                          'eat_apple': 1000, 
+                          'command_sent' : 100, 
+                          'speed_index_slow' : 100,
+                          'speed_index_medium' : 250,
+                          'speed_index_fast' : 500,
                           'speed_index_ultra' : 1000,
                          }
         
@@ -498,7 +529,7 @@ class Scoreboard():
         #for item in self.scoreboard_db:
         #    print('scoreboard_db:','player:',item,'stats:',self.scoreboard_db[item] )
         #print('init class Scoreboard done')
-
+        
 
     def load_db_file(self):
         try:
@@ -520,40 +551,72 @@ class Scoreboard():
 
 
     def create_db_file(self):
-        #try:
+        try:
             scoreboard_file = open("snake_scoreboard.txt", "w")
             print('----------------------------')
             for line in self.scoreboard_db:
-                temp = self.scoreboard_db[line]
-                out_line = "{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}\n".format(line,temp[0],temp[1],temp[2],temp[3],temp[4])
-                print("{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}".format(line,temp[0],temp[1],temp[2],temp[3],temp[4]))
-                #print(out_line)
-                scoreboard_file.write(out_line)
+                if line: # dont create empty name entrys in scoreboard_file
+                    temp = self.scoreboard_db[line]
+                    out_line = "{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}\n".format(line,temp[0],temp[1],temp[2],temp[3],temp[4])
+                    print("{0:s} {1:d} {2:d} {3:d} {4:d} {5:d}".format(line,temp[0],temp[1],temp[2],temp[3],temp[4]))
+                    #print(out_line)
+                    scoreboard_file.write(out_line)
             print('----------------------------')
             scoreboard_file.close()
+        except:        
+            print('===> scoreboard file could not be created!')
+
+    def save_player(self):
+        #try:
+            scoreboard_file = open("snake_scoreboard.txt", "a")
+            print('----------------------------')
+            out_line = "{0:s} {1:d} {2:d} {3:d} {4:.3f} {5:d}\n".format(self.player_name,self.levels_solved,self.apples_eaten,self.commands_sent,self.total_time_passed,self.total_points)
+            print("{0:s} {1:d} {2:d} {3:d} {4:.3f} {5:d}".format(self.player_name,self.levels_solved,self.apples_eaten,self.commands_sent,self.total_time_passed,self.total_points))
+            scoreboard_file.write(out_line)
+            print('----------------------------')
+            scoreboard_file.close()            
         #except:        
-            #print('===> scoreboard file could not be created!')
+        #    print('===> saving player data to scoreboard_file could not be done!')
 
-
-    def game_start(self):
+    def new_game(self):
+        # total data for player saved in the db
+        self.levels_solved = 0
+        self.apples_eaten = 0
+        self.commands_sent = 0
+        self.total_time_passed = 0
+        self.total_points = 0
+        # data for actual level shown in the game window
         self.act_level = 1
+        self.time_passed = 0
+        self.act_points = 0
+        # other variables
+        self.time_level_start = 0
+        self.time_level_end = 0
 
     def next_level(self):
+        # data for actual level shown in the game window
         self.act_level += 1
+        self.time_passed = 0
         self.act_points = 0
-        self.total_points = self.total_points
+        # other variables
+        self.time_level_start = 0
+        self.time_level_end = 0
+
 
     def level_summary(self):
-        print('Level', self.act_level,'passed')
-        print('time needed:', self.time_passed)
-        print('Total Points:', self.total_points)
+        print('_____level summary------------------------------')
+        if self.act_level != self.levels_solved:
+            print('_____actual level:',self.act_level,'===>>> failed !!!' )
+        else:   
+            print('_____levels solved:',self.levels_solved )
+        print('_____total apples eaten:', self.apples_eaten)   
+        print('_____total commands sent:', self.commands_sent)    
+        print('_____time played this level:', self.time_passed)
+        print('_____total time:', self.total_time_passed)
+        print('_____points gained this level:', self.act_points)
+        print('_____total points:', self.total_points)
         print('------------------------------------------------')
 
-    
-    def calc_act_points(self,reason):
-        """ reason = level_solved, eat_apple, command_sent """
-        self.act_points += self.point_db[reason]        
-        return self.act_points   
 
     def calc_time_passed(self,start,end): 
         """ calculates time in s between a start and an end point """
@@ -563,20 +626,36 @@ class Scoreboard():
                             (end.microsecond - start.microsecond)/1000)/1000
         return self.time_passed
 
+
     def output_level_time(self):
          """ calculates the time spent in this level """
          self.calc_time_passed(self.time_level_start, self.time_level_end)
-         return self.time_passed
-             
+
+
+    def calc_act_points(self,reason):
+
+        """ possible reasons: level_solved, eat_apple, command_sent """
+        new_value = self.point_db[reason]           # get the new value from the dict
+        self.act_points += new_value                # update actual points
+        self.total_points += new_value              # update total points
+        
+        if reason == "level_solved":
+            self.levels_solved += 1
+        if reason == "eat_apple":
+            self.apples_eaten += 1       
+        if reason == "command_sent":
+            self.commands_sent += 1
+        
     def calc_total_points(self,speed_index):
         """ calculates total points until game over
         'speed_index_slow' : 1
         'speed_index_medium' : 2
         'speed_index_fast' : 5
         'speed_index_ultra' : 10 """
-        self.total_points += self.act_points    # adds act_points for actual level
-        self.total_points += (self.time_passed * self.point_db[speed_index.get()]) # adds spent time * time_multiplier
-        self.act_points = self.total_points
+        new_value = int((self.time_passed * self.point_db[speed_index.get()])) # adds spent time * time_multiplier
+        self.act_points += new_value                                      # update actual points
+        self.total_points += new_value                                    # update total points
+        self.total_time_passed += self.time_passed                        # update total time passed
         
 
     def reset(self):
@@ -912,15 +991,20 @@ class Spielsteuerung():
         self.spielfeld.load_next_level()        # create a new game and DB
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
-        self.scoreboard.reset()
-        self.scoreboard.game_start()
+        self.scoreboard.new_game()
 
     def restart_level(self):
         self.reset()
-        self.scoreboard.reset()
         self.spielfeld.restart()                # load game data back from DB and restart from the beginning
         self.new_snake_headposition = self.snake.headposition
         self.game_status = self.no_collision
+
+    def next_level(self):
+        self.reset()
+        self.spielfeld.load_next_level()        # create a new game and DB
+        self.new_snake_headposition = self.snake.headposition
+        self.game_status = self.no_collision
+        self.scoreboard.next_level()
         
     def game_over(self):
         self.game_running = False
@@ -929,13 +1013,14 @@ class Spielsteuerung():
         self.level_passed = False
         self.commands = []
         self.show_text('==> Game Over!')
+        print('==> Game Over!')
         self.spielfeld.reason_game_over(self.new_snake_headposition)
-        #self.spielfeld.show_status()
 
         self.scoreboard.time_level_end = datetime.now().time()
         self.scoreboard.output_level_time()
         self.scoreboard.calc_total_points(speed_index=self.speed_index)
-        print('self.game_end =',self.game_end,' self.level_passed=',self.level_passed)
+        self.scoreboard.level_summary()
+        
 
     def game_win(self):
         self.game_running = False
@@ -944,12 +1029,13 @@ class Spielsteuerung():
         self.level_passed = True
         self.commands = []
         self.show_text('==> You win!')
-        #self.spielfeld.show_status()
+        print('==> You win!')
 
         self.scoreboard.time_level_end = datetime.now().time()
         self.scoreboard.output_level_time()
         self.scoreboard.calc_act_points(reason = "level_solved")
         self.scoreboard.calc_total_points(speed_index=self.speed_index)
+        self.scoreboard.level_summary()
 
 
     def reset(self):
@@ -965,9 +1051,7 @@ class Spielsteuerung():
         self.snake.reset()
         self.spielfeld.reset()
         self.spielfeld.create_playground()
-        self.scoreboard.reset()
-        self.show_text('reset spielsteuerung done')
-        print("reset spielsteuerung")
+        print("reset spielsteuerung done")
 
     def show_text(self, text):
         self.act_time = datetime.now().time()
