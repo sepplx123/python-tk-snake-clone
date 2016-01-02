@@ -21,19 +21,23 @@ class GUI():
     def __init__(self, master):
         self.master = master
 
-        self.spielfeld_rows = 10        
-        self.spielfeld_columns = 10
-        self.spielfeld_itemwidth = 50
-        self.spielfeld_itemheight = 50
+        # Game Playground settings
+        self.spielfeld_rows = 50        
+        self.spielfeld_columns = 50
+        self.spielfeld_itemwidth = 15
+        self.spielfeld_itemheight = 15
+        self.apples_amount = 20
+        self.walls_amount = 0
+        
 
         self.speed_index = tk.StringVar()
         self.speed_index.set("")
         
         self.speed_selector = { "" : 900,
                                 "speed_index_slow" : 500 ,
-                                "speed_index_medium" : 350 ,
-                                "speed_index_fast" : 250 ,
-                                "speed_index_ultra" : 50
+                                "speed_index_medium" : 250 ,
+                                "speed_index_fast" : 100 ,
+                                "speed_index_ultra" : 1
                                }
 
         self.topwindow_active = False
@@ -61,7 +65,7 @@ class GUI():
 
         # FRAMES
         self.fr1 = tk.Frame(self.master, width=0, height=20, background='grey')
-        self.fr2 = tk.Frame(self.master,width=200, height=200, background='yellow')
+        self.fr2 = tk.Frame(self.master, width=0, height=0, background='yellow')
         self.fr3 = tk.Frame(self.master, width=0, height=20, background='grey')
         self.fr1.pack(expand=1,fill='y',anchor='center')
         self.fr2.pack(fill='none',expand=0, side='top',anchor='center')
@@ -72,18 +76,12 @@ class GUI():
 
         
         # Canvas
-        self.canvas = tk.Canvas(self.fr2, width=500, height=500,
-                                highlightthickness=1, background='white')
-        self.canvas["background"]='red'
+        self.canvas = tk.Canvas(self.fr2, width=self.spielfeld_columns*self.spielfeld_itemwidth,
+                                height=self.spielfeld_rows*self.spielfeld_itemheight,
+                                highlightthickness=1, background='red')
         self.canvas.grid(row=2,column=2,sticky='nesw')
 
-        # BUTTONS
-        #bQuit = tk.Button(self.fr3, text="Quit", width=8, height=1, command=self.closeWindow)        # Button Quit/Exit
-        #bCreateWorld = tk.Button(self.fr3, text="load new Level",width=0, height=1, command=None)    # Button Create World
-        #bCreateSnake = tk.Button(self.fr3, text="restart",width=0, height=1, command=None)           # Button paint Snake        
-        #bCreateWorld.pack(side="left", padx=10, pady=1,anchor='s')
-        #bCreateSnake.pack(side="left", padx=10, pady=1,anchor='s')       
-        #bQuit.pack(side="right", padx=10, pady=1, anchor='s')        
+        # BUTTONS   
 
         #Scrolled Textbox
         self.scroll_text = tkst.ScrolledText( self.fr3, width=0, height=10, wrap="word", fg='blue',)
@@ -106,7 +104,7 @@ class GUI():
         # Class calls
         self.snake = Snake(self.spielfeld_rows,self.spielfeld_columns,self.scroll_text)
         self.spielfeld = Spielfeld(self.canvas,self.snake,self.spielfeld_rows,self.spielfeld_columns,
-                                   self.spielfeld_itemwidth,self.spielfeld_itemheight,scrollbox=self.scroll_text)
+                                   self.spielfeld_itemwidth,self.spielfeld_itemheight,self.apples_amount,self.walls_amount,scrollbox=self.scroll_text)
         self.leveleditor = Leveleditor(spielfeld=self.spielfeld,snake=self.snake,
                                        canvas=self.canvas,scrollbox=self.scroll_text)
         self.scoreboard = Scoreboard(spielfeld=self.spielfeld,snake=self.snake,
@@ -213,6 +211,7 @@ class GUI():
         
         self.top = tk.Toplevel(bg='black')
         self.top.title("Snake - configure game settings")
+        self.top.resizable(False, False)
 
         self.strv_name = tk.StringVar()
         self.strv_name.set("")
@@ -274,8 +273,9 @@ class GUI():
         
         self.top = tk.Toplevel(bg='black')
         self.top.title("Snake - Level finished")
+        self.top.resizable(False, False)
 
-        L0 = tk.Label(self.top, fg="blue",text="<<<<<   Congratulations! You win!!!   >>>>>")
+        L0 = tk.Label(self.top, fg="blue",text="",font=("Arial", 14))
         L0.grid(row=0,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
         
         L1_0 = tk.Label(self.top, fg="blue",text="actual level:")
@@ -314,7 +314,7 @@ class GUI():
         L4_1_value = tk.Label(self.top, fg="blue",text="{0:>06d}".format(self.scoreboard.commands_sent))
         L4_1_value.grid(row=4,column=5,ipadx=0,padx=0,pady=5,sticky="w")
         
-        L5 = tk.Label(self.top, fg="blue",text="Do you want to load next level?")
+        L5 = tk.Label(self.top, fg="blue",font=("Arial", 14),text="Do you want to load next level?")
         L5.grid(row=5,column=0,ipadx=20,padx=10,pady=5,columnspan=10,sticky="nesw")
 
 
@@ -325,13 +325,16 @@ class GUI():
         b_end = tk.Button(self.top, fg="blue",text="end", width=8,command=self.topwindow_close_game_end)
         b_end.grid(row=6,column=5,columnspan=1,ipadx=2,padx=2,pady=5,sticky="e")
 
-        
         if self.spielsteuerung.level_passed:
-            # Buttons continue or end or maybe save!
-            pass
+            L0.config(text="<<<<<   Congratulations! You win!!!   >>>>>")
+            L5.config(text="Do you want to continue?")
+            b_continue.config(state="normal")
         else:
-            pass
-            # Hide button continue and make end to OK  
+            L0.config(text="<<<<<   Sorry!!! You lost!!!   >>>>>")
+            L5.config(text="Do you want to save or end game?")
+            b_continue.config(state="disabled")
+
+
 
     def topwindow_close_game_end(self):
         self.topwindow_watched = True
@@ -519,9 +522,9 @@ class Scoreboard():
                           'speed_index_ultra' : 1000,
                          }
         
-        self.scoreboard_db = {self.player_name : [self.levels_solved, self.apples_eaten, self.commands_sent,
+        self.scoreboard_db = { self.player_name : [self.levels_solved, self.apples_eaten, self.commands_sent,
                                                   self.total_time_passed, self.total_points]
-                             }
+                              }
 
 
         self.load_db_file()
@@ -567,7 +570,7 @@ class Scoreboard():
             print('===> scoreboard file could not be created!')
 
     def save_player(self):
-        #try:
+        try:
             scoreboard_file = open("snake_scoreboard.txt", "a")
             print('----------------------------')
             out_line = "{0:s} {1:d} {2:d} {3:d} {4:.3f} {5:d}\n".format(self.player_name,self.levels_solved,self.apples_eaten,self.commands_sent,self.total_time_passed,self.total_points)
@@ -575,8 +578,8 @@ class Scoreboard():
             scoreboard_file.write(out_line)
             print('----------------------------')
             scoreboard_file.close()            
-        #except:        
-        #    print('===> saving player data to scoreboard_file could not be done!')
+        except:        
+            print('===> saving player data to scoreboard_file could not be done!')
 
     def new_game(self):
         # total data for player saved in the db
@@ -633,7 +636,6 @@ class Scoreboard():
 
 
     def calc_act_points(self,reason):
-
         """ possible reasons: level_solved, eat_apple, command_sent """
         new_value = self.point_db[reason]           # get the new value from the dict
         self.act_points += new_value                # update actual points
@@ -716,9 +718,6 @@ class Leveleditor():
        
     
     def save_level(self):
-        print('start saving level.......')
-        print(len(self.spielfeld.spielfeld_db),self.spielfeld.spielfeld_db)
-        
         liste = []
         level_name = fdialog.asksaveasfilename(defaultextension=".txt", title="save snake level")
         
@@ -1159,7 +1158,7 @@ class Snake():
 ##############################################################################################################
 
 class Spielfeld(): 
-    def __init__(self,canvas,snake,spielfeld_rows,spielfeld_columns,spielfeld_itemwidth,spielfeld_itemheight,scrollbox):
+    def __init__(self,canvas,snake,spielfeld_rows,spielfeld_columns,spielfeld_itemwidth,spielfeld_itemheight,apples_amount,walls_amount,scrollbox):
         """
         init Spielfeld als schwarze Boxen      
         self.spielfeld0_0 = tk.Canvas(self.mainWindow, width=50, height=50, highlightthickness=1, background="black")
@@ -1177,8 +1176,8 @@ class Spielfeld():
         self.itemheight = spielfeld_itemheight
         self.scrollbox = scrollbox
 
-        self.apples_amount = 5
-        self.walls_amount = 5
+        self.apples_amount = apples_amount
+        self.walls_amount = walls_amount
 
         self.spielfeld_db = {}         
         self.empty_fields = []
@@ -1282,7 +1281,6 @@ class Spielfeld():
             self.create_exit()
 
     def update_spielfeld_dict(self,item,snake_head):
-        
         if item in self.snake_positions:
             self.spielfeld_db[item] = "S"
             if snake_head:
@@ -1295,7 +1293,7 @@ class Spielfeld():
             self.spielfeld_db[item] = "E"
         if item in self.empty_fields:
             self.spielfeld_db[item] = " "
-        print('==>>> item:', item, 'changed to item_type:',self.spielfeld_db[item])
+        #print('==>>> item:', item, 'changed to item_type:',self.spielfeld_db[item])
             
 
     def edit_mode(self,coords,next_item_mode):
