@@ -22,11 +22,11 @@ class GUI():
         self.master = master
 
         # Game Playground settings
-        self.spielfeld_rows = 50        
-        self.spielfeld_columns = 50
-        self.spielfeld_itemwidth = 15
-        self.spielfeld_itemheight = 15
-        self.apples_amount = 20
+        self.spielfeld_rows = 100        
+        self.spielfeld_columns = 100
+        self.spielfeld_itemwidth = 7
+        self.spielfeld_itemheight = 7
+        self.apples_amount = 2400
         self.walls_amount = 0
         
 
